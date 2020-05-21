@@ -56,19 +56,14 @@ object CartesianTopology {
     val (x, y) = posToCoords(pos, p_sqrt)
 
     ProcessorInfo(p, pos, (x, y),
-      shiftPos(pos, p_sqrt, x, y, 1, 1),
-      shiftPos(pos, p_sqrt, x, y, x, y))
+      shiftPos(pos, p_sqrt, x, y, x, y),
+      shiftPos(pos, p_sqrt, x, y, 1, 1))
   }
 
 }
 
 object Test {
   def main(args: Array[String]): Unit = {
-    println(CartesianTopology.getPosition(22, 64))
-    println(CartesianTopology.getPosition(23, 64))
-    println(CartesianTopology.getPosition(59, 64))
-    println(CartesianTopology.getPosition(0, 64))
-    println(CartesianTopology.getPosition(63, 64))
   }
 
 }
