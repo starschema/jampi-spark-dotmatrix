@@ -29,7 +29,7 @@ package com.starschema.jampi
 
 case class GridLocation(left: Int, right: Int, up: Int, down: Int)
 
-case class ProcessorInfo(p: Int, pos: Int, coords: (Int, Int), initial: GridLocation, neighbors: GridLocation)
+case class ProcessorInfo(p: Int, pos: Int, p_sqrt: Int, coords: (Int, Int), initial: GridLocation, neighbors: GridLocation)
 
 object CartesianTopology {
 
@@ -55,15 +55,9 @@ object CartesianTopology {
     val p_sqrt = (Math sqrt p).intValue()
     val (x, y) = posToCoords(pos, p_sqrt)
 
-    ProcessorInfo(p, pos, (x, y),
+    ProcessorInfo(p, pos, p_sqrt, (x, y),
       shiftPos(pos, p_sqrt, x, y, x, y),
       shiftPos(pos, p_sqrt, x, y, 1, 1))
-  }
-
-}
-
-object Test {
-  def main(args: Array[String]): Unit = {
   }
 
 }
