@@ -24,11 +24,61 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.starschema.jampi
+package com.starschema.jampi.nio
 
-import org.scalatest._
-import org.scalatest.matchers.should.Matchers._
+import java.net.{InetSocketAddress, StandardSocketOptions}
+import java.nio.ByteBuffer
+import java.nio.channels.{AsynchronousServerSocketChannel, AsynchronousSocketChannel}
 
-class DotProductTest extends FunSuite   {
+object ShiftData {
 
+  def connectPier(source: Int, destHost: String, destPort: Int): SocketPool = {
+    implicit val sockets : SocketPool = SocketPool.getEmptySocketPool
+
+    SocketPool
+      .listenServerOnPort(1111)
+      .connectToHost(destHost, destPort)
+  }
+
+  def shiftData(source: Int, dest: Int, buffer: ByteBuffer): Unit = {
+
+    // server socket
+    val listenAddr = new InetSocketAddress("0.0.0.0", 1111)
+    val serverSocket = AsynchronousServerSocketChannel.open()
+    serverSocket.bind(listenAddr)
+
+    val fClient = serverSocket.accept()
+
+
+    // client connect
+    val peerAddr = new InetSocketAddress("127.0.0.1", 1111)
+
+    val client = AsynchronousSocketChannel
+      .open()
+      .setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true)
+      .setOption[java.lang.Boolean](StandardSocketOptions.TCP_NODELAY, true)
+    client.connect(peerAddr).get()
+
+    // send with future
+    val future = client.write(buffer)
+
+    // receive with future
+    val buf = ByteBuffer.allocate(10)
+    val r = fClient.get().read(buf)
+
+    println(r.get())
+
+    // wait
+    println(future.get())
+
+
+    client.close()
+  }
+
+  def main(args: Array[String]): Unit = {
+    val message = "lol".getBytes()
+    val buffer = ByteBuffer.wrap(message)
+
+    shiftData(0, 0, buffer)
+  }
 }

@@ -24,11 +24,31 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.starschema.jampi
+package com.starschema.jampi.nio
+
+import java.security.KeyStore.TrustedCertificateEntry
 
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
 
-class DotProductTest extends FunSuite   {
+class ShiftDataTest extends FunSuite {
 
+  def socketsShouldBeOpen(sp: SocketPool, boolean: Boolean) = {
+    sp.clientSocket.isOpen should be (boolean)
+
+    sp.clientServerSocket match {
+      case Some(clientServerSocket) => clientServerSocket.isOpen should be (boolean)
+      case None => assert(boolean == false)
+    }
+  }
+
+  test("Connect pier local (1-thread)") {
+    // connect sockets
+    val sp = ShiftData.connectPier(1111,"127.0.0.1",1111)
+    socketsShouldBeOpen(sp,true)
+
+    // close sockets
+    SocketPool.close(sp)
+    socketsShouldBeOpen(sp,false)
+  }
 }
