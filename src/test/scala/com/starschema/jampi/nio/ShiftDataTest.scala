@@ -26,12 +26,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.nio
 
-import java.security.KeyStore.TrustedCertificateEntry
+import java.nio.ByteBuffer
 
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
 
 class ShiftDataTest extends FunSuite {
+
+  def getIntBuffers(size: Int,fill: => Integer) : (ByteBuffer,ByteBuffer) = {
+    val destBuffer = ByteBuffer.allocate(4 * size * size)
+
+    val source = new Array[Byte](4 * size * size)
+    val random = Array.fill[Int](size * size) {fill}
+    val sourceBuffer = ByteBuffer.wrap(source)
+    sourceBuffer
+      .asIntBuffer()
+      .put(random)
+
+    (sourceBuffer, destBuffer)
+  }
+
+  def getRandomIntBuffers(size: Int) : (ByteBuffer,ByteBuffer) = getIntBuffers(size, scala.util.Random.nextInt(1000))
 
   def socketsShouldBeOpen(sp: SocketPool, boolean: Boolean) = {
     sp.clientSocket.isOpen should be (boolean)
@@ -51,4 +66,55 @@ class ShiftDataTest extends FunSuite {
     SocketPool.close(sp)
     socketsShouldBeOpen(sp,false)
   }
+
+  test("Shift data single thread")
+  {
+    val (sourceBuffer,destBuffer) = getRandomIntBuffers(64)
+
+    // connect sockets
+    val sp = ShiftData.shiftData(1111,"127.0.0.1",1111,sourceBuffer, destBuffer)
+    socketsShouldBeOpen(sp,true)
+
+    assert( sourceBuffer === destBuffer)
+
+    // close sockets
+    SocketPool.close(sp)
+    socketsShouldBeOpen(sp,false)
+  }
+
+  test("Shift data 2-threads") {
+
+    case class ThreadProcessor(sourcePort: Int, destPort: Int) extends Runnable {
+
+      def run {
+        val (sourceBuffer,destBuffer) = getIntBuffers(64,sourcePort)
+
+        val sp = ShiftData.shiftData(sourcePort,"127.0.0.1",destPort,sourceBuffer, destBuffer)
+        socketsShouldBeOpen(sp,true)
+
+        // check first element
+        destBuffer.rewind()
+        destBuffer.asIntBuffer().get(0) should be (destPort)
+
+        // check last element
+        destBuffer.rewind()
+        destBuffer.asIntBuffer().get( sourceBuffer.limit() / 4 - 1) should be (destPort)
+
+        // close sockets
+        SocketPool.close(sp)
+        socketsShouldBeOpen(sp,false)
+      }
+
+    }
+
+    val tp1 = new Thread( ThreadProcessor(1111,1112) )
+    val tp2 = new Thread( ThreadProcessor(1112,1111) )
+
+    tp1.start()
+    tp2.start()
+    tp1.join()
+    tp2.join()
+
+  }
+
 }

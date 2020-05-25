@@ -36,6 +36,7 @@ import org.scalatest.matchers.should.Matchers._
 
 
 class DotProductVectorTest extends FunSuite   {
+
   def time[R](block: => R): R = {
     val t0 = System.nanoTime()
     val result = block // call-by-name
@@ -112,7 +113,6 @@ class DotProductVectorTest extends FunSuite   {
     buf
       .asIntBuffer()
       .put(random)
-
 
     Files.write(file, byteArray)
   }

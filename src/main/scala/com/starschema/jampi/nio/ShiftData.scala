@@ -26,9 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.nio
 
-import java.net.{InetSocketAddress, StandardSocketOptions}
 import java.nio.ByteBuffer
-import java.nio.channels.{AsynchronousServerSocketChannel, AsynchronousSocketChannel}
 
 object ShiftData {
 
@@ -36,49 +34,29 @@ object ShiftData {
     implicit val sockets : SocketPool = SocketPool.getEmptySocketPool
 
     SocketPool
-      .listenServerOnPort(1111)
+      .listenServerOnPort(source)
       .connectToHost(destHost, destPort)
   }
 
-  def shiftData(source: Int, dest: Int, buffer: ByteBuffer): Unit = {
-
-    // server socket
-    val listenAddr = new InetSocketAddress("0.0.0.0", 1111)
-    val serverSocket = AsynchronousServerSocketChannel.open()
-    serverSocket.bind(listenAddr)
-
-    val fClient = serverSocket.accept()
-
-
-    // client connect
-    val peerAddr = new InetSocketAddress("127.0.0.1", 1111)
-
-    val client = AsynchronousSocketChannel
-      .open()
-      .setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true)
-      .setOption[java.lang.Boolean](StandardSocketOptions.TCP_NODELAY, true)
-    client.connect(peerAddr).get()
+  def shiftData(sourcePort: Int, destHost:  String, destPort: Int,
+                sourceBuffer: ByteBuffer,
+                  destBuffer: ByteBuffer): SocketPool = {
+    val sp = connectPier(sourcePort,destHost,destPort)
 
     // send with future
-    val future = client.write(buffer)
+    val fWrite = sp.clientSocket.write(sourceBuffer)
 
     // receive with future
-    val buf = ByteBuffer.allocate(10)
-    val r = fClient.get().read(buf)
+    val fRead = sp.clientServerSocket match {
+      case Some(s) => s.read(destBuffer)
+      case None => throw new IllegalStateException
+    }
 
-    println(r.get())
+    // Sync buffers
+    fRead.get()
+    fWrite.get()
 
-    // wait
-    println(future.get())
-
-
-    client.close()
+    sp
   }
 
-  def main(args: Array[String]): Unit = {
-    val message = "lol".getBytes()
-    val buffer = ByteBuffer.wrap(message)
-
-    shiftData(0, 0, buffer)
-  }
 }
