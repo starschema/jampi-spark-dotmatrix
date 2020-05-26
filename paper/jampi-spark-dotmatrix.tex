@@ -15,6 +15,8 @@
 
 \usepackage{graphicx}
 
+\usepackage{algpseudocode}
+
 \AtBeginEnvironment{quote}{\singlespace\vspace{-\topsep}\small}
 \AtEndEnvironment{quote}{\vspace{-\topsep}\endsinglespace}
 
@@ -76,7 +78,7 @@
 \section{Introduction} % (fold)
 \label{sec:introduction}
 
-The matrix multiplication operation $\star$ for an $p \times q$ matrix $A$ and an $q \times r$ matrix $B$ is defined so that for the resultant matrix $C = A \star B$, each element $c_{i, j}$ is the dot product of the $i$-th row of $A$ and the $j$-th row of $B$, i.e.
+The matrix multiplication operation $\star$ for an $p \times q$ matrix $\mathbf{A}$ and an $q \times r$ matrix $B$ is defined so that for the resultant matrix $\mathbf{C} = \mathbf{A} \star \mathbf{B}$, each element $c_{i, j}$ is the dot product of the $i$-th row of $\mathbf{A}$ and the $j$-th row of $\mathbf{B}$, i.e.
 
 $$ c_{i, j} = \sum_{k = 1}^n a_{i, k} b_{k, j} $$
 
@@ -89,9 +91,27 @@ JAMPI (Java Assisted Matrix Product with Inter-task communication) is an efficie
 
 % subsection cannon_s_algorithm (end)
 
-The multiplication of square matrices constituites a special case. For a square matrix of order $n$, i.e. an $n 
-\times n$ matrix, a special case obtains, which can be resolved efficiently using Cannon's algorithm.
+The multiplication of square matrices constituites a special case. For a square matrix of order $n$, i.e. an $n \times n$ matrix, a special case obtains, which can be resolved efficiently using Cannon's algorithm.\cite{cannon1969cellular} 
 
+For a square matrix of order $n$, i.e. $n \times n$, Cannon's algoritm uses a toroidally connected mesh $\mathjbf{P}^{n \times n}$ of $n^2$ processes. Rendered in pseudocode, the algorithm can be expressed as follows:
+
+\begin{algorithmic}
+	\ForAll{i = 0 : N - 1}
+		\State CShift left A[i; :] by i 
+	\EndFor
+	
+	\ForAll{j = 0 : N - 1}
+		\State CShift up B[:; j] by j 
+	\EndFor
+	
+	\For{k = 0 : N - 1}
+		\For{i = 0 : N - 1, j = 0 : N - 1}
+			\State C[i, j] += A[i, j] * B[i, j]
+			\State CShift left A[i; :] by 1
+			\State CShift up B[:; j] by 1
+		\EndFor
+	\EndFor
+\end{algorithmic}
 
 \subsection{Spark's barrier mode} % (fold)
 \label{sub:spark_s_barrier_mode}
