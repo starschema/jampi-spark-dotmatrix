@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.nio
 
-import java.nio.ByteBuffer
+import java.nio.{ByteBuffer, IntBuffer}
 
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
@@ -72,7 +72,10 @@ class ShiftDataTest extends FunSuite {
     val (sourceBuffer,destBuffer) = getRandomIntBuffers(64)
 
     // connect sockets
-    val sp = ShiftData.shiftData(1111,"127.0.0.1",1111,sourceBuffer, destBuffer)
+    val sp = ShiftData.shiftBuffer(
+      ShiftData.connectPier( 1111,"127.0.0.1",1111),
+      sourceBuffer,
+      destBuffer)
     socketsShouldBeOpen(sp,true)
 
     assert( sourceBuffer === destBuffer)
@@ -89,7 +92,10 @@ class ShiftDataTest extends FunSuite {
       def run {
         val (sourceBuffer,destBuffer) = getIntBuffers(64,sourcePort)
 
-        val sp = ShiftData.shiftData(sourcePort,"127.0.0.1",destPort,sourceBuffer, destBuffer)
+        val sp = ShiftData.shiftBuffer(
+          ShiftData.connectPier(sourcePort,"127.0.0.1",destPort),
+          sourceBuffer,
+          destBuffer)
         socketsShouldBeOpen(sp,true)
 
         // check first element
@@ -117,4 +123,12 @@ class ShiftDataTest extends FunSuite {
 
   }
 
+  test("Buffer tests ")  {
+    val inta = Array[Int](1,2,3,4,5)
+    val intb = IntBuffer.wrap(inta)
+
+    val bb = ByteBuffer.allocateDirect(100)
+
+   // bb.asIntBuffer().
+  }
 }

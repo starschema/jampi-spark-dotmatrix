@@ -29,19 +29,26 @@ package com.starschema.jampi.nio
 import java.nio.ByteBuffer
 
 object ShiftData {
+  val PORTBASE = 22000
 
   def connectPier(source: Int, destHost: String, destPort: Int): SocketPool = {
     implicit val sockets : SocketPool = SocketPool.getEmptySocketPool
 
     SocketPool
-      .listenServerOnPort(source)
-      .connectToHost(destHost, destPort)
+      .listenServerOnPort(source + PORTBASE)
+      .connectToHost(destHost, destPort + PORTBASE)
   }
 
-  def shiftData(sourcePort: Int, destHost:  String, destPort: Int,
-                sourceBuffer: ByteBuffer,
+
+  def shiftArray[T:Numeric](sp: SocketPool, sourceArray: Array[T]): SocketPool = {
+
+    sp
+  }
+
+  @inline
+  def shiftBuffer(sp: SocketPool,
+                  sourceBuffer: ByteBuffer,
                   destBuffer: ByteBuffer): SocketPool = {
-    val sp = connectPier(sourcePort,destHost,destPort)
 
     // send with future
     val fWrite = sp.clientSocket.write(sourceBuffer)

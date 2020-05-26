@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.blas
 
+
 import com.starschema.jampi.blas.DotProductVector
 
 import java.nio.ByteBuffer
@@ -115,5 +116,10 @@ class DotProductVectorTest extends FunSuite   {
       .put(random)
 
     Files.write(file, byteArray)
+  }
+
+
+  test("Add two vectors") {
+
   }
 }

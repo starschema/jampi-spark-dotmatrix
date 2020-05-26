@@ -26,6 +26,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi
 
+import com.starschema.jampi.blas.DotProductVector
+import com.starschema.jampi.nio.{ShiftData, SocketPool}
+
+import scala.reflect.ClassTag
+
 
 object DotProduct {
 
@@ -33,24 +38,64 @@ object DotProduct {
     println(processorInfo.pos + ": " + x)
   }
 
-  def dotProduct[T:Numeric](pos: Integer, p: Integer, sa: Array[T], sb: Array[T]): Unit = {
+  // Call the appropriate matrix multiplier, according to the T type
+  // only Int and Float support as of now
+  def mmul[T:Numeric](p: Integer, sa: Array[T], sb: Array[T], sc:Array[T]) =
+    sa match {
+      case a if a.isInstanceOf[Array[Int]] => DotProductVector.mmulPanama(p,
+        sa.asInstanceOf[Array[Int]],
+        sb.asInstanceOf[Array[Int]],
+        sc.asInstanceOf[Array[Int]])
+      case a if a.isInstanceOf[Array[Float]] => DotProductVector.mmulPanama(p,
+        sa.asInstanceOf[Array[Float]],
+        sb.asInstanceOf[Array[Float]],
+        sc.asInstanceOf[Array[Float]])
+      case _ => throw new UnsupportedOperationException
+    }
+
+  def dotProduct[T:Numeric](pos: Integer, p: Integer, sa: Array[T], sb: Array[T])(implicit m: ClassTag[T]): Unit = {
     val pi = CartesianTopology.getPosition(pos, p)
+    val sc = new Array[T](sa.length)
+
 
     // XXX: not sure, it could happen that left is source and right is dest
-    log(pi, "Sending sa to " + pi.initial.left + ", receiving from " + pi.initial.right)
-    log(pi, "Sending sb to " + pi.initial.up + ", receiving from " + pi.initial.down)
+    val initialHorizontalSa = ShiftData.connectPier(pi.pos, "localhost", pi.initial.left)
+    val initialVerticalSa = ShiftData.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000)
 
-    for (i <- 0 to pi.p_sqrt) {
+    log(pi, "Sending sa to " + pi.initial.left + ", receiving from " + pi.initial.right)
+    ShiftData.shiftArray(initialHorizontalSa,sa)
+    SocketPool.close(initialHorizontalSa)
+
+    log(pi, "Sending sb to " + pi.initial.up + ", receiving from " + pi.initial.down)
+    ShiftData.shiftArray(initialVerticalSa ,sa)
+    SocketPool.close(initialVerticalSa)
+
+
+    val horizontalSa = ShiftData.connectPier(pi.pos, "localhost", pi.neighbors.left)
+    val verticalSa = ShiftData.connectPier(pi.pos + 10000, "localhost", pi.neighbors.up + 10000)
+
+    for (i <- 0 to pi.p_sqrt - 1) {
+      mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)
+      //XXX: vector sum sc + partial_sc
+
+      // last shift is not required if we don't use sa/sb
       log(pi, "iter " + i + " sending sa to " + pi.neighbors.left + ", receiving from " + pi.neighbors.right)
+      ShiftData.shiftArray(horizontalSa, sa)
       log(pi, "iter " + i + " sending sb to " + pi.neighbors.up + ", receiving from " + pi.neighbors.down)
+      ShiftData.shiftArray(verticalSa, sb)
     }
+
+    SocketPool.close(horizontalSa)
+    SocketPool.close(verticalSa)
 
   }
 
 
   def main(args: Array[String]): Unit = {
+    val sa =  Array.fill[Int](64*64) {0}
+    val sb =  Array.fill[Int](64*64) {0}
 
-    dotProduct(9, 16, "".getBytes(), "".getBytes())
+    dotProduct(0, 1, sa, sb)
 
   }
 }

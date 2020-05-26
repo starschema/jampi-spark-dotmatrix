@@ -27,26 +27,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.starschema.jampi.nio
 
 import java.net.{InetSocketAddress, StandardSocketOptions}
-import java.nio.channels.{AsynchronousServerSocketChannel, AsynchronousSocketChannel }
+import java.nio.ByteBuffer
+import java.nio.channels.{AsynchronousServerSocketChannel, AsynchronousSocketChannel}
 import java.util.concurrent.TimeUnit
 
 // Network state
 case class SocketPool(serverSocket: AsynchronousServerSocketChannel,
                       clientSocket: AsynchronousSocketChannel,
-                      clientServerSocket: Option[AsynchronousSocketChannel])
+                      clientServerSocket: Option[AsynchronousSocketChannel],
+                      sendBuffer: ByteBuffer,
+                      receiveBuffer: ByteBuffer)
 
 // Companion class to manage network state
 object SocketPool {
   private val TIMEOUT = 10L
+  private val DIRECT_BUFFER_LEN = 8 * 1024 * 1024
 
   def getEmptySocketPool: SocketPool = SocketPool(
     serverSocket = AsynchronousServerSocketChannel.open,
     clientSocket = AsynchronousSocketChannel.open(),
-    clientServerSocket =  None
+    clientServerSocket =  None,
+    ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN),
+    ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN)
   )
 
   def listenServerOnPort(port: Int)(implicit socketPool: SocketPool) = {
-    socketPool.serverSocket.bind(new InetSocketAddress("0.0.0.0", port))
+    socketPool
+      .serverSocket
+      .setOption[java.lang.Boolean](StandardSocketOptions.SO_REUSEPORT, true)
+      .bind(new InetSocketAddress("0.0.0.0", port))
     this
   }
 
