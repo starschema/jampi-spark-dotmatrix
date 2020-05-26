@@ -117,4 +117,9 @@ class DotProductVectorTest extends FunSuite   {
 
     Files.write(file, byteArray)
   }
+
+
+  test("Add two vectors") {
+
+  }
 }

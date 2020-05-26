@@ -72,7 +72,7 @@ class ShiftDataTest extends FunSuite {
     val (sourceBuffer,destBuffer) = getRandomIntBuffers(64)
 
     // connect sockets
-    val sp = ShiftData.shiftData(
+    val sp = ShiftData.shiftBuffer(
       ShiftData.connectPier( 1111,"127.0.0.1",1111),
       sourceBuffer,
       destBuffer)
@@ -92,7 +92,7 @@ class ShiftDataTest extends FunSuite {
       def run {
         val (sourceBuffer,destBuffer) = getIntBuffers(64,sourcePort)
 
-        val sp = ShiftData.shiftData(
+        val sp = ShiftData.shiftBuffer(
           ShiftData.connectPier(sourcePort,"127.0.0.1",destPort),
           sourceBuffer,
           destBuffer)

@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.starschema.jampi
 
 import com.starschema.jampi.blas.DotProductVector
+import com.starschema.jampi.nio.{ShiftData, SocketPool}
 
 import scala.reflect.ClassTag
 
@@ -58,15 +59,34 @@ object DotProduct {
 
 
     // XXX: not sure, it could happen that left is source and right is dest
+    val initialHorizontalSa = ShiftData.connectPier(pi.pos, "localhost", pi.initial.left)
+    val initialVerticalSa = ShiftData.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000)
+
     log(pi, "Sending sa to " + pi.initial.left + ", receiving from " + pi.initial.right)
+    ShiftData.shiftArray(initialHorizontalSa,sa)
+    SocketPool.close(initialHorizontalSa)
+
     log(pi, "Sending sb to " + pi.initial.up + ", receiving from " + pi.initial.down)
+    ShiftData.shiftArray(initialVerticalSa ,sa)
+    SocketPool.close(initialVerticalSa)
 
-    mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)
 
-    for (i <- 0 to pi.p_sqrt) {
+    val horizontalSa = ShiftData.connectPier(pi.pos, "localhost", pi.neighbors.left)
+    val verticalSa = ShiftData.connectPier(pi.pos + 10000, "localhost", pi.neighbors.up + 10000)
+
+    for (i <- 0 to pi.p_sqrt - 1) {
+      mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)
+      //XXX: vector sum sc + partial_sc
+
+      // last shift is not required if we don't use sa/sb
       log(pi, "iter " + i + " sending sa to " + pi.neighbors.left + ", receiving from " + pi.neighbors.right)
+      ShiftData.shiftArray(horizontalSa, sa)
       log(pi, "iter " + i + " sending sb to " + pi.neighbors.up + ", receiving from " + pi.neighbors.down)
+      ShiftData.shiftArray(verticalSa, sb)
     }
+
+    SocketPool.close(horizontalSa)
+    SocketPool.close(verticalSa)
 
   }
 
@@ -75,7 +95,7 @@ object DotProduct {
     val sa =  Array.fill[Int](64*64) {0}
     val sb =  Array.fill[Int](64*64) {0}
 
-    dotProduct(9, 16, sa, sb)
+    dotProduct(0, 1, sa, sb)
 
   }
 }
