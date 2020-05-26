@@ -1,0 +1,176 @@
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+\pdfoutput=1
+\documentclass[fleqn,10pt]{SelfArx} % Document font size and equations flushed left
+
+\usepackage[english]{babel} % Specify a different language here - english by default
+
+\usepackage[super,biblabel]{cite} % Superscript citations
+
+\usepackage{setspace} % for block quoting
+
+\usepackage{etoolbox}
+
+\usepackage{graphicx}
+
+\AtBeginEnvironment{quote}{\singlespace\vspace{-\topsep}\small}
+\AtEndEnvironment{quote}{\vspace{-\topsep}\endsinglespace}
+
+%----------------------------------------------------------------------------------------
+%	COLUMNS
+%----------------------------------------------------------------------------------------
+
+\setlength{\columnsep}{0.55cm} % Distance between the two columns of text
+\setlength{\fboxrule}{0.75pt} % Width of the border around the abstract
+
+%----------------------------------------------------------------------------------------
+%	COLORS
+%----------------------------------------------------------------------------------------
+
+\definecolor{color1}{RGB}{0,0,90} % Color of the article title and sections
+\definecolor{color2}{RGB}{0,20,20} % Color of the boxes behind the abstract and headings
+
+%----------------------------------------------------------------------------------------
+%	HYPERLINKS
+%----------------------------------------------------------------------------------------
+
+\usepackage{hyperref} % Required for hyperlinks
+\hypersetup{hidelinks,colorlinks,breaklinks=true,urlcolor=color2,citecolor=color1,linkcolor=color1,bookmarksopen=false,pdftitle={Title},pdfauthor={Author}}
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE INFORMATION
+%----------------------------------------------------------------------------------------
+
+% \JournalInfo{..., 2020} % Journal information
+% \Archive{arXiv pre-print} % Additional notes (e.g. copyright, DOI, review/research article)
+
+\PaperTitle{JAMPI: efficient matrix multiplication in Spark using Barrier Mode} % Article title
+
+\Authors{Tamas Foldi\textsuperscript{1}*, Chris von Csefalvay\textsuperscript{1}} % Authors
+\affiliation{\textsuperscript{1}\textit{Starschema Inc., Arlington, VA.}} % Author affiliation
+\affiliation{*\textbf{Corresponding author}: tfoldi@starschema.net} % Corresponding author
+
+% \Keywords{Spark --- Matrix multiplication --- Algorithmic methods} % Keywords - if you don't want any simply remove all the text between the curly brackets
+% \newcommand{\keywordname}{Keywords} % Defines the keywords heading name
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\Abstract{The new barrier mode in Apache Spark allows embedding distributed deep learning training as a Spark stage to simplify the distributed training workflow. In Spark, a task in a stage doesn’t depend on any other tasks in the same stage, and hence it can be scheduled independently. However, several algorithms require more sophisticated inter-task communications, similar to the MPI paradigm. By combining distributed message passing  (using nio/netty), JVM's new \texttt{Vector<>} API and Spark's barrier mode, we can add non-map/reduce based algorithms, such as Cannon's distributed matrix multiplication, improving the performance of the existing MLlib implementation. This paper discloses an efficient distributed matrix multiplication algorithm within a barrier task, which results in an XXX\% performance increase on a 10,000x10,000 square matrix. Applications of efficient matrix multiplication include significantly accelerating the training and implementation of deep convolutional neural network based workloads.}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+%\flushbottom % Makes all text pages the same height
+\maketitle % Print the title and abstract box
+%\tableofcontents % Print the contents section
+% \thispagestyle{empty} % Removes page numbering from the first page
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\section{Introduction} % (fold)
+\label{sec:introduction}
+
+The matrix multiplication operation $\star$ for an $p \times q$ matrix $A$ and an $q \times r$ matrix $B$ is defined so that for the resultant matrix $C = A \star B$, each element $c_{i, j}$ is the dot product of the $i$-th row of $A$ and the $j$-th row of $B$, i.e.
+
+$$ c_{i, j} = \sum_{k = 1}^n a_{i, k} b_{k, j} $$
+
+Matrix multiplication plays a significant role in a range of practical applications, including (but not limited to) the training of deep convolutional neural networks (deep learning). With the increasing importance of deep learning in virtually all fields it has been brought to bear on, it is critical to develop efficient distributed primitives that leverage computational capacity through rapid parallel computation. While packages comprising efficient matrix primitives already exist,\cite{chetlur2014cudnn} these often operate at a low level and do not integrate well with existing and proven solutions to manage large computational loads. In particular, few integrate with Apache Spark, by far one of the most widely used large distributed cluster computing frameworks, and those that do are relatively less efficient. 
+
+JAMPI (Java Assisted Matrix Product with Inter-task communication) is an efficient and rapid solution to this problem. By integrating JVM's new \texttt{Vector<>} API, \texttt{nio/netty} for distributed message passing and Spark's barrier mode, a pure Scala implementation of Cannon's algorithm can be devised that is significantly more efficient than \texttt{MLlib}'s \texttt{BlockMatrix.multiply} function. JAMPI thus avoids reliance on low level code on one hand while also being a pure Scala implementation. Thus, it runs natively in Scala, i.e. within the JVM, while also offering the performance increase of a low-level MPI implemented resource negotiation framework.
+
+\subsection{Cannon's algorithm} % (fold)
+\label{sub:cannon_s_algorithm}
+
+% subsection cannon_s_algorithm (end)
+
+The multiplication of square matrices constituites a special case. For a square matrix of order $n$, i.e. an $n 
+\times n$ matrix, a special case obtains, which can be resolved efficiently using Cannon's algorithm.
+
+
+\subsection{Spark's barrier mode} % (fold)
+\label{sub:spark_s_barrier_mode}
+
+% subsection spark_s_barrier_mode (end)
+
+% section introduction (end)
+
+\section{Methods} % (fold)
+\label{sec:methods}
+
+\subsection{Cannon's algorithm on MPI} % (fold)
+\label{sub:cannon_s_algorithm_on_mpi}
+
+% subsection cannon_s_algorithm_on_mpi (end)
+
+\subsection{Matrix multiplication as a barrier task} % (fold)
+\label{sub:matrix_multiplication_as_a_barrier_task}
+
+% subsection matrix_multiplication_as_a_barrier_task (end)
+
+\subsection{Vector unrolling} % (fold)
+\label{sub:vector_unrolling}
+
+% subsection vector_unrolling (end)
+
+\subsection{Inter-node communication} % (fold)
+\label{sub:inter_node_communication}
+
+% subsection inter_node_communication (end)
+
+\subsection{Test protocols} % (fold)
+\label{sub:test_protocols}
+
+% subsection test_protocols (end)
+
+% section methods (end)
+
+\section{Results} % (fold)
+\label{sec:results}
+
+% section results (end)
+
+\section{Conclusion} % (fold)
+\label{sec:conclusion}
+
+% section conclusion (end)
+
+%------------------------------------------------
+\phantomsection
+\section*{Acknowledgments} % The \section*{} command stops section numbering
+
+% \addcontentsline{toc}{section}{Acknowledgments} % Adds this section to the table of contents
+
+The authors wish to thank Anjan Banerjee for the discussions that inspired this paper. All errors and ommissions are the authors' own.
+
+\phantomsection
+\section*{Competing interests} % The \section*{} command stops section numbering
+
+% \addcontentsline{toc}{section}{Acknowledgments} % Adds this section to the table of contents
+
+The authors have declared no competing interest.
+
+\phantomsection
+\section*{Funding statement} % The \section*{} command stops section numbering
+
+% \addcontentsline{toc}{section}{Acknowledgments} % Adds this section to the table of contents
+
+The research summarised in this paper was funded by Starschema Inc.
+
+
+%----------------------------------------------------------------------------------------
+%	REFERENCE LIST
+%----------------------------------------------------------------------------------------
+\phantomsection
+
+\bibliographystyle{unsrt}
+\bibliography{bibliography}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
