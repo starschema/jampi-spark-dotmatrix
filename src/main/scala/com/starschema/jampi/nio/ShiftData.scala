@@ -38,10 +38,9 @@ object ShiftData {
       .connectToHost(destHost, destPort)
   }
 
-  def shiftData(sourcePort: Int, destHost:  String, destPort: Int,
+  def shiftData(sp: SocketPool,
                 sourceBuffer: ByteBuffer,
                   destBuffer: ByteBuffer): SocketPool = {
-    val sp = connectPier(sourcePort,destHost,destPort)
 
     // send with future
     val fWrite = sp.clientSocket.write(sourceBuffer)
