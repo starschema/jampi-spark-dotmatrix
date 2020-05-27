@@ -111,7 +111,9 @@ For a square matrix of order $n$, i.e. $n \times n$, Cannon's algoritm uses a to
 	\EndFor
 \end{algorithmic}
 
-Standard methods of multiplying dense matrices require $O(n^3)$ floating operations for an $n \times n$ operations. Cannon's algorithm is designed to be performed on a virtual square grid of processors 
+Cannon's algorithm is designed to be performed on a virtual square grid $\mathbf{P}$ of $p$ processors (i.e. a $\sqrt{p} \times \sqrt{p}$ matrix). The multiplicand and multiplier matrices $\mathbf{A}$ and $\mathbf{B}$ are laid out on $\mathbf{P}$, after which the $i$-th row of $\mathbf{A}$ is circularly shifted by $i$ to the left and the $j$-th column of $\mathbf{B}$ circularly shifted by $j$ elements up. Then, $n$ times, the two entries mapped onto $p_{i, j}$ are multiplied and added onto the running value of $p_{i, j}$, after which each row of $\mathbf{A}$ is shifted left by one element and each column of $\mathbf{B}$ is shifted up by one element.
+
+Standard methods of multiplying dense matrices require $O(n^3)$ floating operations for an $n \times n$ matrix. Cannon's algorithm improves on this by reducing it to $O(\frac{n^3}{p})$. In particular, because of the fact that memory is not dependent on the number of processors, it scales dynamically with the number of processors. This makes it an attractive candidate for implementation as a high-performance distributed matrix multiplication primitive.
 
 % subsection cannon_s_algorithm (end)
 
