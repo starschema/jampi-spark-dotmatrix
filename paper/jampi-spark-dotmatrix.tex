@@ -91,19 +91,19 @@ JAMPI (Java Assisted Matrix Product with Inter-task communication), the framewor
 
 The multiplication of square matrices constituites a special case. For a square matrix of order $n$, i.e. an $n \times n$ matrix, a special case obtains, which can be resolved efficiently using Cannon's algorithm.\cite{cannon1969cellular} 
 
-For a square matrix of order $n$, i.e. $n \times n$, Cannon's algoritm uses a toroidally connected mesh $\mathjbf{P}^{n \times n}$ of $n^2$ processes. Rendered in pseudocode, the algorithm can be expressed as follows for $p$ processors:
+For a square matrix of order $n$, i.e. $n \times n$, Cannon's algoritm uses a toroidally connected mesh $\mathbf{P}^{n \times n}$ of $n^2$ processes. Rendered in pseudocode, the algorithm can be expressed as follows for $p$ processors:
 
 \begin{algorithmic}
-	\ForAll{i = 0 : \sqrt{p} - 1}
+	\ForAll{i = 0 : $\sqrt{p}$ - 1}
 		\State CShift left A[i; :] by i 
 	\EndFor
 	
-	\ForAll{j = 0 : \sqrt{p} - 1}
+	\ForAll{j = 0 : $\sqrt{p}$ - 1}
 		\State CShift up B[:; j] by j 
 	\EndFor
 	
-	\For{k = 0 : \sqrt{p} - 1}
-		\For{i = 0 : \sqrt{p} - 1, j = 0 : \sqrt{p} - 1}
+	\For{k = 0 : $\sqrt{p}$ - 1}
+		\For{i = 0 : $\sqrt{p}$ - 1, j = 0 : $\sqrt{p}$ - 1}
 			\State C[i, j] += A[i, j] * B[i, j]
 			\State CShift left A[i; :] by 1
 			\State CShift up B[:; j] by 1
