@@ -189,12 +189,18 @@ justification=raggedright]{caption}
 \newcommand{\Keywords}[1]{\def\@Keywords{#1}}
 
 % ---------------------------------------------------------------------
+\IfFileExists{revision.tex}{
+  \include{revision}
+  \newcommand{\revstr}{Draft, rev.\ \Revision}
+}{
+  \newcommand{\revstr}{arXiv preprint}
+}
 
 \renewcommand{\@maketitle}{%
 \twocolumn[{%
 \thispagestyle{empty}%
 \vskip-36pt%
-%{\raggedleft\small\sffamily\bfseries\@JournalInfo\\\@Archive\par}%
+{\raggedleft\small\sffamily\bfseries\revstr\par}%
 \vskip20pt%
 {\raggedright\color{color1}\sffamily\bfseries\fontsize{20}{25}\selectfont \@PaperTitle\par}%
 \vskip10pt%
@@ -208,7 +214,7 @@ justification=raggedright]{caption}
 \sffamily\textbf{\abstractname}\\\@Abstract%
 \else%
 \sffamily\textbf{\abstractname}\\\@Abstract\\[4pt]%
-\textbf{\keywordname}\\\@Keywords%
+% \textbf{\keywordname}\\\@Keywords%
 \fi%
 }%
 }%
