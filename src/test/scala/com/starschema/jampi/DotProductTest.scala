@@ -35,8 +35,8 @@ class DotProductTest extends FunSuite   {
   test("int and float 64x64 matrices filled with 1") {
     val size = 64
 
-    val f = Array.fill[Int](size * size) { 1 }
     val i = Array.fill[Int](size * size) { 1 }
+    val f = Array.fill[Float](size * size) { 1 }
 
     val iresult = DotProduct.dotProduct(0, 1, i, i)
     val fresult = DotProduct.dotProduct(0, 1, f, f)

@@ -119,12 +119,4 @@ class DotProductVectorTest extends FunSuite   {
   }
 
 
-  test("Add two vectors - naive") {
-    val a = Array(1,2,3,4)
-    val b = Array(1,2,1,2)
-
-    DotProductVector.sumVectors(a,b)
-
-    assert( b === Array(2,4,4,6))
-  }
 }
