@@ -28,27 +28,47 @@ package com.starschema.jampi.nio
 
 import java.nio.ByteBuffer
 
-object ShiftData {
+object PeerMessage {
   val PORTBASE = 22000
+  val NET_BUFFER_SIZE = 8 * 1024 * 1024
 
-  def connectPier(source: Int, destHost: String, destPort: Int): SocketPool = {
-    implicit val sockets : SocketPool = SocketPool.getEmptySocketPool
+  def connectPier(source: Int, destHost: String, destPort: Int): PeerConnection = {
+    implicit val sockets : PeerConnection = PeerConnection.getPeerConnection
 
-    SocketPool
+    PeerConnection
       .listenServerOnPort(source + PORTBASE)
       .connectToHost(destHost, destPort + PORTBASE)
   }
 
 
-  def shiftArray[T:Numeric](sp: SocketPool, sourceArray: Array[T]): SocketPool = {
+  def shiftArray(sp: PeerConnection, sourceArray: Array[_]): PeerConnection = {
 
-    sp
+    //val sourceBuffer = ByteBuffer.allocateDirect(NET_BUFFER_SIZE)
+    //val destBuffer = ByteBuffer.allocateDirect(NET_BUFFER_SIZE)
+    val sourceBuffer = ByteBuffer.allocateDirect( sourceArray.length * 4) // FIXME
+    val destBuffer = ByteBuffer.allocateDirect( sourceArray.length * 4) // FIXME
+
+    // TODO: implement iteration
+    sourceArray match {
+      case sa:Array[Int] => sourceBuffer.asIntBuffer().put(sa)
+      case sa:Array[Float] => sourceBuffer.asFloatBuffer().put(sa)
+      case _ => throw new NotImplementedError("Only float and integers are supported")
+    }
+
+    val new_sp = shiftBuffer(sp, sourceBuffer, destBuffer) : PeerConnection
+
+    sourceArray match {
+      case sa:Array[Int] => destBuffer.flip().asIntBuffer().get(sa)
+      case sa:Array[Float] => destBuffer.flip().asFloatBuffer().get(sa)
+    }
+
+    new_sp
   }
 
   @inline
-  def shiftBuffer(sp: SocketPool,
+  def shiftBuffer(sp: PeerConnection,
                   sourceBuffer: ByteBuffer,
-                  destBuffer: ByteBuffer): SocketPool = {
+                  destBuffer: ByteBuffer): PeerConnection = {
 
     // send with future
     val fWrite = sp.clientSocket.write(sourceBuffer)

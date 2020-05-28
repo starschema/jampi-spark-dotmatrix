@@ -31,7 +31,7 @@ import java.nio.{ByteBuffer, IntBuffer}
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
 
-class ShiftDataTest extends FunSuite {
+class PeerMessageTest extends FunSuite {
 
   def getIntBuffers(size: Int,fill: => Integer) : (ByteBuffer,ByteBuffer) = {
     val destBuffer = ByteBuffer.allocate(4 * size * size)
@@ -48,7 +48,7 @@ class ShiftDataTest extends FunSuite {
 
   def getRandomIntBuffers(size: Int) : (ByteBuffer,ByteBuffer) = getIntBuffers(size, scala.util.Random.nextInt(1000))
 
-  def socketsShouldBeOpen(sp: SocketPool, boolean: Boolean) = {
+  def socketsShouldBeOpen(sp: PeerConnection, boolean: Boolean) = {
     sp.clientSocket.isOpen should be (boolean)
 
     sp.clientServerSocket match {
@@ -59,11 +59,11 @@ class ShiftDataTest extends FunSuite {
 
   test("Connect pier local (1-thread)") {
     // connect sockets
-    val sp = ShiftData.connectPier(1111,"127.0.0.1",1111)
+    val sp = PeerMessage.connectPier(1111,"127.0.0.1",1111)
     socketsShouldBeOpen(sp,true)
 
     // close sockets
-    SocketPool.close(sp)
+    PeerConnection.close(sp)
     socketsShouldBeOpen(sp,false)
   }
 
@@ -72,8 +72,8 @@ class ShiftDataTest extends FunSuite {
     val (sourceBuffer,destBuffer) = getRandomIntBuffers(64)
 
     // connect sockets
-    val sp = ShiftData.shiftBuffer(
-      ShiftData.connectPier( 1111,"127.0.0.1",1111),
+    val sp = PeerMessage.shiftBuffer(
+      PeerMessage.connectPier( 1111,"127.0.0.1",1111),
       sourceBuffer,
       destBuffer)
     socketsShouldBeOpen(sp,true)
@@ -81,7 +81,7 @@ class ShiftDataTest extends FunSuite {
     assert( sourceBuffer === destBuffer)
 
     // close sockets
-    SocketPool.close(sp)
+    PeerConnection.close(sp)
     socketsShouldBeOpen(sp,false)
   }
 
@@ -92,8 +92,8 @@ class ShiftDataTest extends FunSuite {
       def run {
         val (sourceBuffer,destBuffer) = getIntBuffers(64,sourcePort)
 
-        val sp = ShiftData.shiftBuffer(
-          ShiftData.connectPier(sourcePort,"127.0.0.1",destPort),
+        val sp = PeerMessage.shiftBuffer(
+          PeerMessage.connectPier(sourcePort,"127.0.0.1",destPort),
           sourceBuffer,
           destBuffer)
         socketsShouldBeOpen(sp,true)
@@ -107,14 +107,14 @@ class ShiftDataTest extends FunSuite {
         destBuffer.asIntBuffer().get( sourceBuffer.limit() / 4 - 1) should be (destPort)
 
         // close sockets
-        SocketPool.close(sp)
+        PeerConnection.close(sp)
         socketsShouldBeOpen(sp,false)
       }
 
     }
 
-    val tp1 = new Thread( ThreadProcessor(1111,1112) )
-    val tp2 = new Thread( ThreadProcessor(1112,1111) )
+    val tp1 = new Thread( ThreadProcessor(1211,1212) )
+    val tp2 = new Thread( ThreadProcessor(1212,1211) )
 
     tp1.start()
     tp2.start()

@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.starschema.jampi
 
 import com.starschema.jampi.blas.DotProductVector
-import com.starschema.jampi.nio.{ShiftData, SocketPool}
+import com.starschema.jampi.nio.{PeerMessage, PeerConnection}
 
 import scala.reflect.ClassTag
 
@@ -40,62 +40,63 @@ object DotProduct {
 
   // Call the appropriate matrix multiplier, according to the T type
   // only Int and Float support as of now
-  def mmul[T:Numeric](p: Integer, sa: Array[T], sb: Array[T], sc:Array[T]) =
-    sa match {
-      case a if a.isInstanceOf[Array[Int]] => DotProductVector.mmulPanama(p,
-        sa.asInstanceOf[Array[Int]],
-        sb.asInstanceOf[Array[Int]],
-        sc.asInstanceOf[Array[Int]])
-      case a if a.isInstanceOf[Array[Float]] => DotProductVector.mmulPanama(p,
-        sa.asInstanceOf[Array[Float]],
-        sb.asInstanceOf[Array[Float]],
-        sc.asInstanceOf[Array[Float]])
+  def mmul(p: Integer, sa: Array[_], sb: Array[_], sc:Array[_]): Unit =
+    (sa,sb,sc) match {
+      case (a: Array[Int], b: Array[Int], c: Array[Int]) => DotProductVector.mmulPanama(p,a,b,c)
+      case (a: Array[Float], b: Array[Float], c: Array[Float]) => DotProductVector.mmulPanama(p,a,b,c)
       case _ => throw new UnsupportedOperationException
     }
 
-  def dotProduct[T:Numeric](pos: Integer, p: Integer, sa: Array[T], sb: Array[T])(implicit m: ClassTag[T]): Unit = {
+  def dotProduct[T : ClassTag](pos: Integer, p: Integer, sa: Array[T], sb: Array[T]): Array[T] = {
     val pi = CartesianTopology.getPosition(pos, p)
     val sc = new Array[T](sa.length)
+//    val c_result = new Array[T](sa.length)
 
 
     // XXX: not sure, it could happen that left is source and right is dest
-    val initialHorizontalSa = ShiftData.connectPier(pi.pos, "localhost", pi.initial.left)
-    val initialVerticalSa = ShiftData.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000)
+    val initialHorizontalSa = PeerMessage.connectPier(pi.pos, "localhost", pi.initial.left)
+    val initialVerticalSa = PeerMessage.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000)
 
     log(pi, "Sending sa to " + pi.initial.left + ", receiving from " + pi.initial.right)
-    ShiftData.shiftArray(initialHorizontalSa,sa)
-    SocketPool.close(initialHorizontalSa)
+    PeerMessage.shiftArray(initialHorizontalSa,sa)
+    PeerConnection.close(initialHorizontalSa)
 
     log(pi, "Sending sb to " + pi.initial.up + ", receiving from " + pi.initial.down)
-    ShiftData.shiftArray(initialVerticalSa ,sa)
-    SocketPool.close(initialVerticalSa)
+    PeerMessage.shiftArray(initialVerticalSa ,sa)
+    PeerConnection.close(initialVerticalSa)
 
 
-    val horizontalSa = ShiftData.connectPier(pi.pos, "localhost", pi.neighbors.left)
-    val verticalSa = ShiftData.connectPier(pi.pos + 10000, "localhost", pi.neighbors.up + 10000)
+    val horizontalSa = PeerMessage.connectPier(pi.pos, "localhost", pi.neighbors.left)
+    val verticalSa = PeerMessage.connectPier(pi.pos + 10000, "localhost", pi.neighbors.up + 10000)
 
     for (i <- 0 to pi.p_sqrt - 1) {
       mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)
-      //XXX: vector sum sc + partial_sc
+
+      // XXX: not sure we need it
+      //DotProductVector.sumVectors(sc,c_result)
 
       // last shift is not required if we don't use sa/sb
       log(pi, "iter " + i + " sending sa to " + pi.neighbors.left + ", receiving from " + pi.neighbors.right)
-      ShiftData.shiftArray(horizontalSa, sa)
+      PeerMessage.shiftArray(horizontalSa, sa)
       log(pi, "iter " + i + " sending sb to " + pi.neighbors.up + ", receiving from " + pi.neighbors.down)
-      ShiftData.shiftArray(verticalSa, sb)
+      PeerMessage.shiftArray(verticalSa, sb)
     }
 
-    SocketPool.close(horizontalSa)
-    SocketPool.close(verticalSa)
+    PeerConnection.close(horizontalSa)
+    PeerConnection.close(verticalSa)
 
+    sc
   }
 
 
   def main(args: Array[String]): Unit = {
-    val sa =  Array.fill[Int](64*64) {0}
-    val sb =  Array.fill[Int](64*64) {0}
+    val sa =  Array.fill[Int](64*64) {scala.util.Random.nextInt(1000) }
+    val sb =  Array.fill[Int](64*64) {1}
+    val fsa =  Array.fill[Float](64*64) {scala.util.Random.nextInt(1000) }
+    val fsb =  Array.fill[Float](64*64) {1}
 
-    dotProduct(0, 1, sa, sb)
+    val res = dotProduct(0, 1, sa, sb)
+    val res2 = dotProduct(0, 1, fsa, fsb)
 
   }
 }

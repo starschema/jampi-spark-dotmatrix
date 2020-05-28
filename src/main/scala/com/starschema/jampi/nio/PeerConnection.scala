@@ -26,24 +26,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.nio
 
-import java.net.{InetSocketAddress, StandardSocketOptions}
+import java.net.{ConnectException, InetSocketAddress, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.{AsynchronousServerSocketChannel, AsynchronousSocketChannel}
 import java.util.concurrent.TimeUnit
 
 // Network state
-case class SocketPool(serverSocket: AsynchronousServerSocketChannel,
-                      clientSocket: AsynchronousSocketChannel,
-                      clientServerSocket: Option[AsynchronousSocketChannel],
-                      sendBuffer: ByteBuffer,
-                      receiveBuffer: ByteBuffer)
+case class PeerConnection(serverSocket: AsynchronousServerSocketChannel,
+                          clientSocket: AsynchronousSocketChannel,
+                          clientServerSocket: Option[AsynchronousSocketChannel],
+                          sendBuffer: ByteBuffer,
+                          receiveBuffer: ByteBuffer)
 
 // Companion class to manage network state
-object SocketPool {
+object PeerConnection {
   private val TIMEOUT = 10L
   private val DIRECT_BUFFER_LEN = 8 * 1024 * 1024
 
-  def getEmptySocketPool: SocketPool = SocketPool(
+  def getPeerConnection: PeerConnection = PeerConnection(
     serverSocket = AsynchronousServerSocketChannel.open,
     clientSocket = AsynchronousSocketChannel.open(),
     clientServerSocket =  None,
@@ -51,7 +51,7 @@ object SocketPool {
     ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN)
   )
 
-  def listenServerOnPort(port: Int)(implicit socketPool: SocketPool) = {
+  def listenServerOnPort(port: Int)(implicit socketPool: PeerConnection) = {
     socketPool
       .serverSocket
       .setOption[java.lang.Boolean](StandardSocketOptions.SO_REUSEPORT, true)
@@ -59,24 +59,33 @@ object SocketPool {
     this
   }
 
-  def connectToHost(destHost: String, destPort: Int)(implicit socketPool: SocketPool) = {
+  def connectToHost(destHost: String, destPort: Int)(implicit socketPool: PeerConnection) = {
     // connect to remote host
+    val dest = new InetSocketAddress(destHost, destPort)
     val fClient = socketPool.clientSocket
       .setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true)
       .setOption[java.lang.Boolean](StandardSocketOptions.TCP_NODELAY, true)
-      .connect(new InetSocketAddress(destHost, destPort))
+      .connect(dest)
 
     // accept client from remote location
     val clientServer = socketPool.serverSocket.accept().get(TIMEOUT, TimeUnit.SECONDS)
 
     // make sure our client connection is accepted remotely
-    fClient.get()
+    try {
+      fClient.get()
+    } catch {
+      case e: Exception => {
+        println("Exception, sleeping a bit")
+        Thread.sleep(1000)
+        socketPool.clientSocket.connect(dest).get()
+      }
+    }
 
     // add clientServerSocket to our connection state
     socketPool.copy(clientServerSocket = Some(clientServer) )
   }
 
-  def close(implicit socketPool: SocketPool): Unit = {
+  def close(implicit socketPool: PeerConnection): Unit = {
     if (socketPool.clientSocket.isOpen) socketPool.clientSocket.close()
     if (socketPool.serverSocket.isOpen) socketPool.serverSocket.close()
 
@@ -86,6 +95,5 @@ object SocketPool {
     }
   }
 
-  def getSocketPool(implicit socketPool: SocketPool) = socketPool
 }
 

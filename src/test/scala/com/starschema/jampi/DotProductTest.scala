@@ -26,9 +26,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi
 
+import com.starschema.jampi.DotProduct
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
 
 class DotProductTest extends FunSuite   {
 
+  test("int and float 64x64 matrices filled with 1") {
+    val size = 64
+
+    val f = Array.fill[Int](size * size) { 1 }
+    val i = Array.fill[Int](size * size) { 1 }
+
+    val iresult = DotProduct.dotProduct(0, 1, i, i)
+    val fresult = DotProduct.dotProduct(0, 1, f, f)
+
+    iresult should contain only size
+    fresult should contain only size
+  }
 }

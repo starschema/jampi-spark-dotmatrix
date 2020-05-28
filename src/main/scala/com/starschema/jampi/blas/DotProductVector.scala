@@ -146,4 +146,16 @@ object DotProductVector {
     }
   }
 
+
+  // add vector A to vector B (in-place)
+  def sumVectors(a: Array[_], b: Array[_]) : Unit = {
+
+    (a,b) match {
+      case (a:Array[Int], b:Array[Int]) =>
+        for(i <- 0 until a.length ) {
+          b(i) = a(i) + b(i)
+      }
+    }
+  }
+
 }
