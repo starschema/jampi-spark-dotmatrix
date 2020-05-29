@@ -31,68 +31,117 @@ import java.nio.ByteBuffer
 import java.nio.channels.{AsynchronousServerSocketChannel, AsynchronousSocketChannel}
 import java.util.concurrent.TimeUnit
 
+import scala.util.{Failure, Success, Try}
+
 // Network state
 case class PeerConnection(serverSocket: AsynchronousServerSocketChannel,
-                          clientSocket: AsynchronousSocketChannel,
+                          clientSocket: Option[AsynchronousSocketChannel],
                           clientServerSocket: Option[AsynchronousSocketChannel],
+                          destinationAddress: InetSocketAddress,
+                          isLoopback: Boolean,
                           sendBuffer: ByteBuffer,
                           receiveBuffer: ByteBuffer)
 
 // Companion class to manage network state
 object PeerConnection {
   private val TIMEOUT = 10L
+  private val PORTBASE = 22000
   private val DIRECT_BUFFER_LEN = 8 * 1024 * 1024
 
-  def getPeerConnection: PeerConnection = PeerConnection(
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  def getPeerConnection(dest: InetSocketAddress, isLoopback: Boolean): PeerConnection = PeerConnection(
     serverSocket = AsynchronousServerSocketChannel.open,
-    clientSocket = AsynchronousSocketChannel.open(),
+    clientSocket = None,
     clientServerSocket =  None,
+    destinationAddress = dest,
+    isLoopback = isLoopback,
     ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN),
     ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN)
   )
 
-  def listenServerOnPort(port: Int)(implicit socketPool: PeerConnection) = {
-    socketPool
+  def connectPier(sourcePort: Int, destHost: String, destPort: Int): Try[PeerConnection] = {
+    val dest = new InetSocketAddress(destHost, destPort + PORTBASE)
+    implicit val peerConnection : PeerConnection = PeerConnection.getPeerConnection(dest, sourcePort == destPort )
+
+    val clientSocket = PeerConnection
+      .listenServerOnPort(sourcePort + PORTBASE)
+      .connectClient
+
+    val serverConnection = acceptConnection
+
+    if ( clientSocket.isFailure || serverConnection.isFailure )
+      Failure( new java.net.ConnectException("Cannot establish peer connection") )
+    else
+      Success(peerConnection.copy(clientSocket = clientSocket.toOption, clientServerSocket = serverConnection.toOption))
+  }
+
+  def connectClient(implicit peerConnection: PeerConnection): Try[AsynchronousSocketChannel] = {
+    //case
+    val clientSocket = connectToHost
+
+    clientSocket match {
+      case Failure(exception) => {
+        Thread.sleep(250)
+        connectClient(peerConnection)
+      }
+      case success => success
+    }
+  }
+
+  def connectToHost(implicit peerConnection: PeerConnection): Try[AsynchronousSocketChannel] = {
+    // connect to remote host
+    val socket = AsynchronousSocketChannel.open()
+
+    val fClient = socket
+      .setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true)
+      .setOption[java.lang.Boolean](StandardSocketOptions.TCP_NODELAY, true)
+      .connect( peerConnection.destinationAddress )
+
+    // make sure our client connection is accepted remotely
+    val results = Try( fClient.get(1, TimeUnit.SECONDS) )
+
+    results match {
+      case Success(v) => Success(socket)
+      case Failure(ex) => Failure(ex)
+    }
+  }
+
+  def listenServerOnPort(port: Int)(implicit peerConnection: PeerConnection) = {
+    peerConnection
       .serverSocket
       .setOption[java.lang.Boolean](StandardSocketOptions.SO_REUSEPORT, true)
       .bind(new InetSocketAddress("0.0.0.0", port))
+
     this
   }
 
-  def connectToHost(destHost: String, destPort: Int)(implicit socketPool: PeerConnection) = {
-    // connect to remote host
-    val dest = new InetSocketAddress(destHost, destPort)
-    val fClient = socketPool.clientSocket
-      .setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true)
-      .setOption[java.lang.Boolean](StandardSocketOptions.TCP_NODELAY, true)
-      .connect(dest)
+  // accept client from remote location
+  def acceptConnection(implicit peerConnection: PeerConnection): Try[AsynchronousSocketChannel] = {
 
-    // accept client from remote location
-    val clientServer = socketPool.serverSocket.accept().get(TIMEOUT, TimeUnit.SECONDS)
+      peerConnection.clientServerSocket match {
+          // already connected
+        case Some(conn) => Success(conn)
+          // let's accept the connection
+        case None => Try(peerConnection.serverSocket.accept().get(TIMEOUT, TimeUnit.SECONDS))
+      }
 
-    // make sure our client connection is accepted remotely
-    try {
-      fClient.get()
-    } catch {
-      case e: Exception => {
-        println("Exception, sleeping a bit")
-        Thread.sleep(1000)
-        socketPool.clientSocket.connect(dest).get()
+  }
+
+
+
+  def close(implicit peerConnection: PeerConnection): Unit = {
+    if (peerConnection.serverSocket.isOpen) peerConnection.serverSocket.close()
+
+    val closeSomeChannel = {channel: Option[AsynchronousSocketChannel] =>
+      channel match {
+        case Some(s) => if (s.isOpen) s.close()
+        case None =>
       }
     }
 
-    // add clientServerSocket to our connection state
-    socketPool.copy(clientServerSocket = Some(clientServer) )
-  }
-
-  def close(implicit socketPool: PeerConnection): Unit = {
-    if (socketPool.clientSocket.isOpen) socketPool.clientSocket.close()
-    if (socketPool.serverSocket.isOpen) socketPool.serverSocket.close()
-
-    socketPool.clientServerSocket match {
-      case Some(s) => if (s.isOpen) s.close()
-      case None =>
-    }
+    closeSomeChannel(peerConnection.clientSocket)
+    closeSomeChannel(peerConnection.clientServerSocket)
   }
 
 }

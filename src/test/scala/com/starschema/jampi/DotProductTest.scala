@@ -26,7 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi
 
-import com.starschema.jampi.DotProduct
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
 

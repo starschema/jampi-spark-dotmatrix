@@ -27,63 +27,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.starschema.jampi.nio
 
 import java.nio.ByteBuffer
+import java.nio.channels.AsynchronousSocketChannel
+
+import scala.util.{Failure, Success, Try}
 
 object PeerMessage {
-  val PORTBASE = 22000
-  val NET_BUFFER_SIZE = 8 * 1024 * 1024
 
-  def connectPier(source: Int, destHost: String, destPort: Int): PeerConnection = {
-    implicit val sockets : PeerConnection = PeerConnection.getPeerConnection
-
-    PeerConnection
-      .listenServerOnPort(source + PORTBASE)
-      .connectToHost(destHost, destPort + PORTBASE)
-  }
-
-
-  def shiftArray(sp: PeerConnection, sourceArray: Array[_]): PeerConnection = {
-
-    //val sourceBuffer = ByteBuffer.allocateDirect(NET_BUFFER_SIZE)
-    //val destBuffer = ByteBuffer.allocateDirect(NET_BUFFER_SIZE)
-    val sourceBuffer = ByteBuffer.allocateDirect( sourceArray.length * 4) // FIXME
-    val destBuffer = ByteBuffer.allocateDirect( sourceArray.length * 4) // FIXME
+  def shiftArray(sp: PeerConnection, sourceArray: Array[_]): Try[PeerConnection] = {
 
     // TODO: implement iteration
     sourceArray match {
-      case sa:Array[Int] => sourceBuffer.asIntBuffer().put(sa)
-      case sa:Array[Float] => sourceBuffer.asFloatBuffer().put(sa)
+      case sa:Array[Int] => sp.sendBuffer.rewind.asIntBuffer.put(sa)
+      case sa:Array[Float] => sp.sendBuffer.rewind.asFloatBuffer.put(sa)
       case _ => throw new NotImplementedError("Only float and integers are supported")
     }
 
-    val new_sp = shiftBuffer(sp, sourceBuffer, destBuffer) : PeerConnection
+    val new_sp = shiftBuffer(sp) : Try[PeerConnection]
 
     sourceArray match {
-      case sa:Array[Int] => destBuffer.flip().asIntBuffer().get(sa)
-      case sa:Array[Float] => destBuffer.flip().asFloatBuffer().get(sa)
+      case sa:Array[Int] => sp.receiveBuffer.flip.asIntBuffer.get(sa)
+      case sa:Array[Float] => sp.receiveBuffer.flip.asFloatBuffer.get(sa)
     }
 
     new_sp
   }
 
   @inline
-  def shiftBuffer(sp: PeerConnection,
-                  sourceBuffer: ByteBuffer,
-                  destBuffer: ByteBuffer): PeerConnection = {
+  def shiftBuffer(conn: PeerConnection): Try[PeerConnection] = {
 
-    // send with future
-    val fWrite = sp.clientSocket.write(sourceBuffer)
-
-    // receive with future
-    val fRead = sp.clientServerSocket match {
-      case Some(s) => s.read(destBuffer)
-      case None => throw new IllegalStateException
+    Try {
+      (conn.clientServerSocket, conn.clientSocket) match {
+        case (Some(r), Some(w)) => {
+          val fRead = r.read(conn.receiveBuffer)
+          val fWrite = w.write(conn.sendBuffer)
+          fRead.get()
+          fWrite.get()
+          conn
+        }
+        case _ => throw new IllegalStateException("Socket should be open at this point")
+      }
     }
 
-    // Sync buffers
-    fRead.get()
-    fWrite.get()
-
-    sp
   }
 
 }

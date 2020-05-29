@@ -14,7 +14,7 @@ object SparkMatrixDotProductExample {
 
     val spark = SparkSession.builder
       .appName("JAMPI dotMatrix Multiplication")
-      .config("spark.master", "local[1]")
+      .config("spark.master", "local[4]")
       .config("spark.eventLog.dir", "file:/tmp/spark-events")
       .config("spark.eventLog.enabled",true)
       .getOrCreate()
@@ -22,7 +22,7 @@ object SparkMatrixDotProductExample {
     val sc = spark.sparkContext
 
     val input = Array.fill[Int] (64 * 64) {1}
-    val rdd = sc.parallelize( Vector(input,input,input,input) , 1 )
+    val rdd = sc.parallelize( Vector(input,input,input,input) , 4 )
 
     val foo = rdd.barrier().mapPartitions { iter =>
       val context = BarrierTaskContext.get()
@@ -30,7 +30,7 @@ object SparkMatrixDotProductExample {
 
       val matrix = iter.next()
 
-      DotProduct.dotProduct( context.partitionId(), 1, matrix, matrix).iterator
+      DotProduct.dotProduct( context.partitionId(), 4, matrix, matrix).iterator
     }
 
     val ret = foo.collect()

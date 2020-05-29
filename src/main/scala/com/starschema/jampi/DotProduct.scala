@@ -27,15 +27,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.starschema.jampi
 
 import com.starschema.jampi.blas.DotProductVector
-import com.starschema.jampi.nio.{PeerMessage, PeerConnection}
+import com.starschema.jampi.nio.{PeerConnection, PeerMessage}
+import org.apache.log4j.Logger
 
 import scala.reflect.ClassTag
 
 
 object DotProduct {
+  @transient lazy val log = Logger.getLogger(getClass.getName)
+
 
   protected def log(processorInfo: ProcessorInfo, x: Any): Unit = {
-    println(processorInfo.pos + ": " + x)
+//    println(processorInfo.pos + ": " + x)
+    log.info(processorInfo.pos + ": " + x)
   }
 
   // Call the appropriate matrix multiplier, according to the T type
@@ -54,8 +58,8 @@ object DotProduct {
 
 
     // XXX: not sure, it could happen that left is source and right is dest
-    val initialHorizontalSa = PeerMessage.connectPier(pi.pos, "localhost", pi.initial.left)
-    val initialVerticalSa = PeerMessage.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000)
+    val initialHorizontalSa = PeerConnection.connectPier(pi.pos, "localhost", pi.initial.left).get
+    val initialVerticalSa = PeerConnection.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000).get
 
     log(pi, "Sending sa to " + pi.initial.left + ", receiving from " + pi.initial.right)
     PeerMessage.shiftArray(initialHorizontalSa,sa)
@@ -66,8 +70,8 @@ object DotProduct {
     PeerConnection.close(initialVerticalSa)
 
 
-    val horizontalSa = PeerMessage.connectPier(pi.pos, "localhost", pi.neighbors.left)
-    val verticalSa = PeerMessage.connectPier(pi.pos + 10000, "localhost", pi.neighbors.up + 10000)
+    val horizontalSa = PeerConnection.connectPier(pi.pos, "localhost", pi.neighbors.left).get
+    val verticalSa = PeerConnection.connectPier(pi.pos + 10000, "localhost", pi.neighbors.up + 10000).get
 
     for (i <- 0 to pi.p_sqrt - 1) {
       mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)

@@ -49,7 +49,7 @@ class PeerMessageTest extends FunSuite {
   def getRandomIntBuffers(size: Int) : (ByteBuffer,ByteBuffer) = getIntBuffers(size, scala.util.Random.nextInt(1000))
 
   def socketsShouldBeOpen(sp: PeerConnection, boolean: Boolean) = {
-    sp.clientSocket.isOpen should be (boolean)
+    sp.clientSocket.get.isOpen should be (boolean)
 
     sp.clientServerSocket match {
       case Some(clientServerSocket) => clientServerSocket.isOpen should be (boolean)
@@ -59,7 +59,7 @@ class PeerMessageTest extends FunSuite {
 
   test("Connect pier local (1-thread)") {
     // connect sockets
-    val sp = PeerMessage.connectPier(1111,"127.0.0.1",1111)
+    val sp = PeerConnection.connectPier(1111,"127.0.0.1",1111).get
     socketsShouldBeOpen(sp,true)
 
     // close sockets
@@ -70,19 +70,20 @@ class PeerMessageTest extends FunSuite {
   test("Shift data single thread")
   {
     val (sourceBuffer,destBuffer) = getRandomIntBuffers(64)
+    val conn = PeerConnection
+      .connectPier( 1111,"127.0.0.1",1111)
+      .get
+      .copy(sendBuffer=sourceBuffer, receiveBuffer=destBuffer)
 
     // connect sockets
-    val sp = PeerMessage.shiftBuffer(
-      PeerMessage.connectPier( 1111,"127.0.0.1",1111),
-      sourceBuffer,
-      destBuffer)
-    socketsShouldBeOpen(sp,true)
+    val sp = PeerMessage.shiftBuffer(conn)
+    socketsShouldBeOpen(sp.get,true)
 
     assert( sourceBuffer === destBuffer)
 
     // close sockets
-    PeerConnection.close(sp)
-    socketsShouldBeOpen(sp,false)
+    PeerConnection.close(sp.get)
+    socketsShouldBeOpen(sp.get,false)
   }
 
   test("Shift data 2-threads") {
@@ -91,24 +92,25 @@ class PeerMessageTest extends FunSuite {
 
       def run {
         val (sourceBuffer,destBuffer) = getIntBuffers(64,sourcePort)
+        val conn = PeerConnection
+          .connectPier( sourcePort,"127.0.0.1",destPort)
+          .get
+          .copy(sendBuffer=sourceBuffer, receiveBuffer=destBuffer)
 
-        val sp = PeerMessage.shiftBuffer(
-          PeerMessage.connectPier(sourcePort,"127.0.0.1",destPort),
-          sourceBuffer,
-          destBuffer)
-        socketsShouldBeOpen(sp,true)
+        val sp = PeerMessage.shiftBuffer(conn)
+        socketsShouldBeOpen(sp.get,true)
 
         // check first element
         destBuffer.rewind()
-        destBuffer.asIntBuffer().get(0) should be (destPort)
+        sp.get.receiveBuffer.asIntBuffer().get(0) should be (destPort)
 
         // check last element
         destBuffer.rewind()
         destBuffer.asIntBuffer().get( sourceBuffer.limit() / 4 - 1) should be (destPort)
 
         // close sockets
-        PeerConnection.close(sp)
-        socketsShouldBeOpen(sp,false)
+        PeerConnection.close(sp.get)
+        socketsShouldBeOpen(sp.get,false)
       }
 
     }
