@@ -31,6 +31,8 @@ import java.nio.{ByteBuffer, IntBuffer}
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
 
+import scala.util.Try
+
 class PeerMessageTest extends FunSuite {
 
   def getIntBuffers(size: Int,fill: => Integer) : (ByteBuffer,ByteBuffer) = {
@@ -122,6 +124,15 @@ class PeerMessageTest extends FunSuite {
     tp2.start()
     tp1.join()
     tp2.join()
+
+  }
+
+  test("Array shift ") {
+    val size = 64
+    val sp = PeerConnection.connectPier( 1111,"127.0.0.1",1111)
+    val array = Array.fill[Int] (size*size) {0}
+
+    PeerMessage.shiftArray(sp.get, array)
 
   }
 

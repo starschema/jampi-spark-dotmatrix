@@ -32,8 +32,8 @@ import scala.util.{Failure, Success, Try}
 object PeerMessage {
   @transient lazy val log = Logger.getLogger(getClass.getName)
 
-  private def netlog(loggerFunct: String => Unit, message: String)(implicit conn: PeerConnection) {
-    loggerFunct( s"src=${conn.serverSocket.getLocalAddress()} dst=${conn.destinationAddress}" ++
+  private def trace(conn: PeerConnection, message: String) {
+    log.trace( s"src=${conn.serverSocket.getLocalAddress()} dst=${conn.destinationAddress}" ++
       s" rp:${conn.receiveBuffer.position()}" ++
       s"/${conn.receiveBuffer.limit()}" ++
       s" sp:${conn.sendBuffer.position()}" ++
@@ -43,34 +43,52 @@ object PeerMessage {
 
   def shiftArray(sp: PeerConnection, sourceArray: Array[_]): Try[PeerConnection] = {
 
-    // TODO: implement iteration
-    sourceArray match {
-      case sa:Array[Int] => {
-        sp.sendBuffer.rewind().asIntBuffer.put(sa)
-        sp.sendBuffer.limit(sa.length*4)
-        sp.receiveBuffer.limit(sa.length*4)
-      }
-      case sa:Array[Float] => {
-        sp.sendBuffer.rewind().asFloatBuffer.put(sa)
-        sp.sendBuffer.limit(sa.length*8)
-      }
+    val (elementSize,arrayLen) = sourceArray match {
+      case sa:Array[Int] => (4, sa.length)
+      case sa:Array[Float] => (8, sa.length)
       case _ => throw new NotImplementedError("Only float and integers are supported")
     }
 
-    val new_sp = shiftBuffer(sp) : Try[PeerConnection]
+    val arrayByteSize = arrayLen * elementSize
+    val maxElementsInBuffer = PeerConnection.DIRECT_BUFFER_LEN / elementSize
+    val numOfIterations= Math.floor((arrayByteSize-1)/PeerConnection.DIRECT_BUFFER_LEN ).toInt
 
-    // TODO: error handling
-    sourceArray match {
-      case sa:Array[Int] => {
-        netlog(log.trace,"Converting buffer byte->int")(sp)
-        sp.receiveBuffer.rewind().asIntBuffer.get(sa)
+    trace(sp, s"abs=${arrayByteSize} eib=${maxElementsInBuffer}")
+
+
+    // iterate over the array by buffer
+    val ret_sp = (0 to numOfIterations).map{offset =>
+      val elementsToShift = Math.min(maxElementsInBuffer, arrayLen - offset * maxElementsInBuffer)
+
+      trace(sp, s"offs=${offset}, maxElem=${maxElementsInBuffer} elementsToShift=${elementsToShift}")
+
+      // set limit for buffers - mark how much do we expect on receive side
+      sp.sendBuffer.limit(elementsToShift*elementSize)
+      sp.receiveBuffer.limit(elementsToShift*elementSize)
+
+      // load sendBuffer with source array contents
+      sourceArray match {
+        case sa:Array[Int] =>  sp.sendBuffer.rewind().asIntBuffer.put(sa, offset * maxElementsInBuffer, elementsToShift)
+        case sa:Array[Float] =>  sp.sendBuffer.rewind().asFloatBuffer.put(sa, offset * maxElementsInBuffer, elementsToShift)
       }
-      case sa:Array[Float] => sp.receiveBuffer.flip.asFloatBuffer.get(sa)
+
+      //  shift buffers
+      val new_sp = shiftBuffer(sp) : Try[PeerConnection]
+
+      trace(new_sp.get, s"Buffer exchanged, serializing results (offset=${offset}, es=${elementsToShift})")
+
+      // TODO: error handling
+      sourceArray match {
+        case sa:Array[Int] => sp.receiveBuffer.rewind().asIntBuffer.get(sa, offset * maxElementsInBuffer,elementsToShift)
+        case sa:Array[Float] => sp.receiveBuffer.rewind().asFloatBuffer.get(sa, offset * maxElementsInBuffer,elementsToShift)
+      }
+
+      sp.receiveBuffer.clear() // FIXME: move the top?
+
+      new_sp
     }
 
-    sp.receiveBuffer.clear()
-
-    new_sp
+    ret_sp.head // TODO: look for errors
   }
 
   @inline
@@ -88,8 +106,8 @@ object PeerMessage {
               val receivedBytes = fRead.get()
               val sentBytes  = fWrite.get
 
-              netlog(log.trace,s"Read ${receivedBytes} bytes")(conn)
-              netlog(log.trace,s"Write ${sentBytes} bytes ")(conn)
+              //trace(conn, s"Read ${receivedBytes} bytes")
+              //trace(conn, s"Write ${sentBytes} bytes ")
             }
             conn
           }

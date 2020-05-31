@@ -10,7 +10,7 @@ object SparkMatrixDotProductExample {
   @transient lazy val log = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]) {
-    val size = 256
+    val size = 2560
     val numExecutors= 16
 
     val spark = SparkSession.builder
@@ -33,8 +33,6 @@ object SparkMatrixDotProductExample {
       log.info("partition id" + context.partitionId())
 
       val (matrixA,matrixB) = iter.next()
-
-      log.info(matrixA.head)
 
       DotProduct.dotProduct( context.partitionId(), numExecutors, matrixA, matrixB).iterator
     }

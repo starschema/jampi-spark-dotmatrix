@@ -46,7 +46,7 @@ case class PeerConnection(serverSocket: AsynchronousServerSocketChannel,
 object PeerConnection {
   private val TIMEOUT = 10L
   private val PORTBASE = 22000
-  private val DIRECT_BUFFER_LEN = 8 * 1024 * 1024
+  val DIRECT_BUFFER_LEN = 8 * 1024 * 1024
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
