@@ -10,30 +10,38 @@ object SparkMatrixDotProductExample {
   @transient lazy val log = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]) {
-    val size = 64
+    val size = 256
+    val numExecutors= 16
 
     val spark = SparkSession.builder
       .appName("JAMPI dotMatrix Multiplication")
-      .config("spark.master", "local[4]")
+      .config("spark.master", f"local[${numExecutors}]")
       .config("spark.eventLog.dir", "file:/tmp/spark-events")
       .config("spark.eventLog.enabled",true)
       .getOrCreate()
 
     val sc = spark.sparkContext
 
-    val input = Array.fill[Int] (64 * 64) {1}
-    val rdd = sc.parallelize( Vector(input,input,input,input) , 4 )
+
+    lazy val input = Array.fill[Int] (size * size) {1}
+    val rdd = sc
+      .parallelize( Vector.fill[Array[Int]] (numExecutors) { Array.emptyIntArray } , numExecutors )
+      .map(_ => (input,input))
 
     val foo = rdd.barrier().mapPartitions { iter =>
       val context = BarrierTaskContext.get()
       log.info("partition id" + context.partitionId())
 
-      val matrix = iter.next()
+      val (matrixA,matrixB) = iter.next()
 
-      DotProduct.dotProduct( context.partitionId(), 4, matrix, matrix).iterator
+      log.info(matrixA.head)
+
+      DotProduct.dotProduct( context.partitionId(), numExecutors, matrixA, matrixB).iterator
     }
 
-    val ret = foo.collect()
+    val ret = foo.mean()
+
+    log.info(s"ret head is ${ret} while expected is ${size * Math.sqrt(numExecutors)}")
 
     spark.stop()
   }

@@ -26,28 +26,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.nio
 
-import java.nio.ByteBuffer
-import java.nio.channels.AsynchronousSocketChannel
-
+import org.apache.log4j.Logger
 import scala.util.{Failure, Success, Try}
 
 object PeerMessage {
+  @transient lazy val log = Logger.getLogger(getClass.getName)
+
+  private def netlog(loggerFunct: String => Unit, message: String)(implicit conn: PeerConnection) {
+    loggerFunct( s"src=${conn.serverSocket.getLocalAddress()} dst=${conn.destinationAddress}" ++
+      s" rp:${conn.receiveBuffer.position()}" ++
+      s"/${conn.receiveBuffer.limit()}" ++
+      s" sp:${conn.sendBuffer.position()}" ++
+      s"/${conn.sendBuffer.limit()} -- " ++
+      message)
+  }
 
   def shiftArray(sp: PeerConnection, sourceArray: Array[_]): Try[PeerConnection] = {
 
     // TODO: implement iteration
     sourceArray match {
-      case sa:Array[Int] => sp.sendBuffer.rewind.asIntBuffer.put(sa)
-      case sa:Array[Float] => sp.sendBuffer.rewind.asFloatBuffer.put(sa)
+      case sa:Array[Int] => {
+        sp.sendBuffer.rewind().asIntBuffer.put(sa)
+        sp.sendBuffer.limit(sa.length*4)
+        sp.receiveBuffer.limit(sa.length*4)
+      }
+      case sa:Array[Float] => {
+        sp.sendBuffer.rewind().asFloatBuffer.put(sa)
+        sp.sendBuffer.limit(sa.length*8)
+      }
       case _ => throw new NotImplementedError("Only float and integers are supported")
     }
 
     val new_sp = shiftBuffer(sp) : Try[PeerConnection]
 
+    // TODO: error handling
     sourceArray match {
-      case sa:Array[Int] => sp.receiveBuffer.flip.asIntBuffer.get(sa)
+      case sa:Array[Int] => {
+        netlog(log.trace,"Converting buffer byte->int")(sp)
+        sp.receiveBuffer.rewind().asIntBuffer.get(sa)
+      }
       case sa:Array[Float] => sp.receiveBuffer.flip.asFloatBuffer.get(sa)
     }
+
+    sp.receiveBuffer.clear()
 
     new_sp
   }
@@ -55,18 +76,26 @@ object PeerMessage {
   @inline
   def shiftBuffer(conn: PeerConnection): Try[PeerConnection] = {
 
-    Try {
       (conn.clientServerSocket, conn.clientSocket) match {
         case (Some(r), Some(w)) => {
-          val fRead = r.read(conn.receiveBuffer)
-          val fWrite = w.write(conn.sendBuffer)
-          fRead.get()
-          fWrite.get()
-          conn
+
+          Try {
+            while (conn.receiveBuffer.hasRemaining || conn.sendBuffer.hasRemaining) {
+
+              val fRead = r.read(conn.receiveBuffer)
+              val fWrite = w.write(conn.sendBuffer)
+
+              val receivedBytes = fRead.get()
+              val sentBytes  = fWrite.get
+
+              netlog(log.trace,s"Read ${receivedBytes} bytes")(conn)
+              netlog(log.trace,s"Write ${sentBytes} bytes ")(conn)
+            }
+            conn
+          }
         }
         case _ => throw new IllegalStateException("Socket should be open at this point")
       }
-    }
 
   }
 

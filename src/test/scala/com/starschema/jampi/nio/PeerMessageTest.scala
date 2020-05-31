@@ -69,7 +69,7 @@ class PeerMessageTest extends FunSuite {
 
   test("Shift data single thread")
   {
-    val (sourceBuffer,destBuffer) = getRandomIntBuffers(64)
+    val (sourceBuffer,destBuffer) = getRandomIntBuffers(128)
     val conn = PeerConnection
       .connectPier( 1111,"127.0.0.1",1111)
       .get
@@ -127,9 +127,14 @@ class PeerMessageTest extends FunSuite {
 
   test("Buffer tests ")  {
     val inta = Array[Int](1,2,3,4,5)
-    val intb = IntBuffer.wrap(inta)
+    val a2 = new Array[Int] (100)
 
     val bb = ByteBuffer.allocateDirect(100)
+
+    bb.asIntBuffer().put(inta)
+
+    bb.put("1234".getBytes())
+    val a = bb.asIntBuffer().get(a2)
 
    // bb.asIntBuffer().
   }

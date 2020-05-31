@@ -29,7 +29,6 @@ package com.starschema.jampi
 import com.starschema.jampi.blas.DotProductVector
 import com.starschema.jampi.nio.{PeerConnection, PeerMessage}
 import org.apache.log4j.Logger
-
 import scala.reflect.ClassTag
 
 
@@ -38,12 +37,10 @@ object DotProduct {
 
 
   protected def log(processorInfo: ProcessorInfo, x: Any): Unit = {
-//    println(processorInfo.pos + ": " + x)
     log.info(processorInfo.pos + ": " + x)
   }
 
-  // Call the appropriate matrix multiplier, according to the T type
-  // only Int and Float support as of now
+  // Call the appropriate matrix multiplier - only Int and Float support as of now
   def mmul(p: Integer, sa: Array[_], sb: Array[_], sc:Array[_]): Unit =
     (sa,sb,sc) match {
       case (a: Array[Int], b: Array[Int], c: Array[Int]) => DotProductVector.mmulPanama(p,a,b,c)
@@ -54,10 +51,8 @@ object DotProduct {
   def dotProduct[T : ClassTag](pos: Integer, p: Integer, sa: Array[T], sb: Array[T]): Array[T] = {
     val pi = CartesianTopology.getPosition(pos, p)
     val sc = new Array[T](sa.length)
-//    val c_result = new Array[T](sa.length)
 
-
-    // XXX: not sure, it could happen that left is source and right is dest
+    // TODO: not sure, it could happen that left is source and right is dest
     val initialHorizontalSa = PeerConnection.connectPier(pi.pos, "localhost", pi.initial.left).get
     val initialVerticalSa = PeerConnection.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000).get
 
@@ -69,15 +64,12 @@ object DotProduct {
     PeerMessage.shiftArray(initialVerticalSa ,sa)
     PeerConnection.close(initialVerticalSa)
 
-
-    val horizontalSa = PeerConnection.connectPier(pi.pos, "localhost", pi.neighbors.left).get
-    val verticalSa = PeerConnection.connectPier(pi.pos + 10000, "localhost", pi.neighbors.up + 10000).get
+    // TODO: fix port numbers
+    val horizontalSa = PeerConnection.connectPier(pi.pos + 1000, "localhost", pi.neighbors.left + 1000).get
+    val verticalSa = PeerConnection.connectPier(pi.pos + 11000, "localhost", pi.neighbors.up + 11000).get
 
     for (i <- 0 to pi.p_sqrt - 1) {
       mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)
-
-      // XXX: not sure we need it
-      //DotProductVector.sumVectors(sc,c_result)
 
       // last shift is not required if we don't use sa/sb
       log(pi, "iter " + i + " sending sa to " + pi.neighbors.left + ", receiving from " + pi.neighbors.right)
@@ -92,15 +84,4 @@ object DotProduct {
     sc
   }
 
-
-  def main(args: Array[String]): Unit = {
-    val sa =  Array.fill[Int](64*64) {scala.util.Random.nextInt(1000) }
-    val sb =  Array.fill[Int](64*64) {1}
-    val fsa =  Array.fill[Float](64*64) {scala.util.Random.nextInt(1000) }
-    val fsb =  Array.fill[Float](64*64) {1}
-
-    val res = dotProduct(0, 1, sa, sb)
-    val res2 = dotProduct(0, 1, fsa, fsb)
-
-  }
 }

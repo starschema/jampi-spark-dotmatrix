@@ -56,8 +56,8 @@ object PeerConnection {
     clientServerSocket =  None,
     destinationAddress = dest,
     isLoopback = isLoopback,
-    ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN),
-    ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN)
+    sendBuffer = ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN),
+    receiveBuffer = ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN)
   )
 
   def connectPier(sourcePort: Int, destHost: String, destPort: Int): Try[PeerConnection] = {
