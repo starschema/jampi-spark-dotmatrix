@@ -36,24 +36,31 @@ class DotProductTest extends FunSuite   {
 
     val i = Array.fill[Int](size * size) { 1 }
     val f = Array.fill[Float](size * size) { 1 }
+    val d = Array.fill[Double](size * size) { 1 }
 
     val iresult = DotProduct.dotProduct(0, 1, i, i)
     val fresult = DotProduct.dotProduct(0, 1, f, f)
+    val dresult = DotProduct.dotProduct(0, 1, d, d)
 
     iresult should contain only size
     fresult should contain only size
+    dresult should contain only size
   }
 
-  test("int and float large matrices filled with 1") {
-    val size = 128
+  test("int, double and float large matrices filled with 1") {
+    val size = 1024
 
     val i = Array.fill[Int](size * size) { 1 }
-   // val f = Array.fill[Float](size * size) { 1 }
+    val f = Array.fill[Float](size * size) { 1 }
+    val d = Array.fill[Double](size * size) { 1 }
 
     val iresult = DotProduct.dotProduct(0, 1, i, i)
-    //val fresult = DotProduct.dotProduct(0, 1, f, f)
+    val fresult = DotProduct.dotProduct(0, 1, f, f)
+    val dresult = DotProduct.dotProduct(0, 1, d, d)
 
     iresult should contain only size
-    //fresult should contain only size
+    fresult should contain only size
+    dresult should contain only size
+
   }
 }

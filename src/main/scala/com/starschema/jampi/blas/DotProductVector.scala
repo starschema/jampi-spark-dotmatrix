@@ -26,13 +26,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.blas
 
-import jdk.incubator.vector.{FloatVector, IntVector}
+import jdk.incubator.vector.{DoubleVector, FloatVector, IntVector}
 
 object DotProductVector {
 
   val I128 = IntVector.SPECIES_128
   val I256 = IntVector.SPECIES_256
   val F256  = FloatVector.SPECIES_256
+  val D256  = DoubleVector.SPECIES_256
+  val D512 = DoubleVector.SPECIES_512
 
   /*
    * Source: https://github.com/richardstartin/vectorbenchmarks/blob/master/src/main/java/com/openkappa/panama/vectorbenchmarks/IntMatrixMatrixMultiplication.java#L45
@@ -140,6 +142,63 @@ object DotProductVector {
         }
 
         rowOffset += blockHeight
+      }
+
+      columnOffset += blockWidth
+    }
+  }
+
+
+  /*
+  * based on source from: https://github.com/richardstartin/vectorbenchmarks/blob/master/src/main/java/com/openkappa/panama/vectorbenchmarks/IntMatrixMatrixMultiplication.java#L45
+  */
+  def mmulPanama(n: Int, left: Array[Double], right: Array[Double], result: Array[Double]): Unit = {
+    val blockWidth = if (n >= 256) 512 else 256
+    val block_height = if (n >= 512) 8 else if (n >= 256) 16 else 32
+    var columnOffset = 0
+
+    while ( { columnOffset < n }) {
+      var rowOffset = 0
+      while ( { rowOffset < n }) {
+        for (i <- 0 until n) {
+          var j = columnOffset
+          while ( { j < columnOffset + blockWidth && j < n }) {
+            var sum1 = DoubleVector.fromArray(D512, result, i * n + j)
+            var sum2 = DoubleVector.fromArray(D512, result, i * n + j + 8)
+            var sum3 = DoubleVector.fromArray(D512, result, i * n + j + 16)
+            var sum4 = DoubleVector.fromArray(D512, result, i * n + j + 24)
+            var sum5 = DoubleVector.fromArray(D512, result, i * n + j + 32)
+            var sum6 = DoubleVector.fromArray(D512, result, i * n + j + 40)
+            var sum7 = DoubleVector.fromArray(D512, result, i * n + j + 48)
+            var sum8 = DoubleVector.fromArray(D512, result, i * n + j + 56)
+            var k = rowOffset
+            while ( { k < rowOffset + block_height && k < n } ) {
+              val multiplier = DoubleVector.broadcast(D512, left(i * n + k))
+              sum1 = sum1.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j)))
+              sum2 = sum2.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 8)))
+              sum3 = sum3.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 16)))
+              sum4 = sum4.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 24)))
+              sum5 = sum5.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 32)))
+              sum6 = sum6.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 40)))
+              sum7 = sum7.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 48)))
+              sum8 = sum8.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 56)))
+
+              k += 1
+            }
+            sum1.intoArray(result, i * n + j)
+            sum2.intoArray(result, i * n + j + 8)
+            sum3.intoArray(result, i * n + j + 16)
+            sum4.intoArray(result, i * n + j + 24)
+            sum5.intoArray(result, i * n + j + 32)
+            sum6.intoArray(result, i * n + j + 40)
+            sum7.intoArray(result, i * n + j + 48)
+            sum8.intoArray(result, i * n + j + 56)
+
+            j += 64
+          }
+        }
+
+        rowOffset += block_height
       }
 
       columnOffset += blockWidth

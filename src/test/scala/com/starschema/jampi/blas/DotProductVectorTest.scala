@@ -88,6 +88,22 @@ class DotProductVectorTest extends FunSuite   {
     assert( results1.deep == results2.deep )
   }
 
+  test("compare 64x64 double results with naive implementation") {
+    val size = 64
+    val Eps = 1e-3.toFloat
+
+    val random1 = Array.fill[Double](size * size) { scala.util.Random.nextDouble() % 10000 }
+    val random2 = Array.fill[Double](size * size) { scala.util.Random.nextDouble() % 10000 }
+    val results1 = new Array[Double](size * size)
+    val results2 = new Array[Double](size * size)
+
+    time( mmul_naive(random1,random2,results1,size) )
+    time( DotProductVector.mmulPanama(size,random1,random2,results2) )
+
+    assert( results1.deep == results2.deep )
+    //for (i <- 0 until results1.size) results1(i) should be (results2(i) +- Eps)
+  }
+
   test("compare 64x64 float results with naive implementation") {
     val size = 64
     val Eps = 1e-3.toFloat // Our epsilon

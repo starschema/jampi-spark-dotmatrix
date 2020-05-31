@@ -40,11 +40,12 @@ object DotProduct {
     log.info(processorInfo.pos + ": " + x)
   }
 
-  // Call the appropriate matrix multiplier - only Int and Float support as of now
+  // Use type information instead of parameter overloads
   def mmul(p: Integer, sa: Array[_], sb: Array[_], sc:Array[_]): Unit =
     (sa,sb,sc) match {
       case (a: Array[Int], b: Array[Int], c: Array[Int]) => DotProductVector.mmulPanama(p,a,b,c)
       case (a: Array[Float], b: Array[Float], c: Array[Float]) => DotProductVector.mmulPanama(p,a,b,c)
+      case (a: Array[Double], b: Array[Double], c: Array[Double]) => DotProductVector.mmulPanama(p,a,b,c)
       case _ => throw new UnsupportedOperationException
     }
 
@@ -52,7 +53,6 @@ object DotProduct {
     val pi = CartesianTopology.getPosition(pos, p)
     val sc = new Array[T](sa.length)
 
-    // TODO: not sure, it could happen that left is source and right is dest
     val initialHorizontalSa = PeerConnection.connectPier(pi.pos, "localhost", pi.initial.left).get
     val initialVerticalSa = PeerConnection.connectPier(pi.pos + 10000, "localhost", pi.initial.up + 10000).get
 

@@ -45,7 +45,8 @@ object PeerMessage {
 
     val (elementSize,arrayLen) = sourceArray match {
       case sa:Array[Int] => (4, sa.length)
-      case sa:Array[Float] => (8, sa.length)
+      case sa:Array[Float] => (4, sa.length)
+      case sa:Array[Double] => (8, sa.length)
       case _ => throw new NotImplementedError("Only float and integers are supported")
     }
 
@@ -70,6 +71,7 @@ object PeerMessage {
       sourceArray match {
         case sa:Array[Int] =>  sp.sendBuffer.rewind().asIntBuffer.put(sa, offset * maxElementsInBuffer, elementsToShift)
         case sa:Array[Float] =>  sp.sendBuffer.rewind().asFloatBuffer.put(sa, offset * maxElementsInBuffer, elementsToShift)
+        case sa:Array[Double] =>  sp.sendBuffer.rewind().asDoubleBuffer.put(sa, offset * maxElementsInBuffer, elementsToShift)
       }
 
       //  shift buffers
@@ -81,6 +83,7 @@ object PeerMessage {
       sourceArray match {
         case sa:Array[Int] => sp.receiveBuffer.rewind().asIntBuffer.get(sa, offset * maxElementsInBuffer,elementsToShift)
         case sa:Array[Float] => sp.receiveBuffer.rewind().asFloatBuffer.get(sa, offset * maxElementsInBuffer,elementsToShift)
+        case sa:Array[Double] => sp.receiveBuffer.rewind().asDoubleBuffer.get(sa, offset * maxElementsInBuffer,elementsToShift)
       }
 
       sp.receiveBuffer.clear() // FIXME: move the top?
@@ -106,8 +109,8 @@ object PeerMessage {
               val receivedBytes = fRead.get()
               val sentBytes  = fWrite.get
 
-              //trace(conn, s"Read ${receivedBytes} bytes")
-              //trace(conn, s"Write ${sentBytes} bytes ")
+              trace(conn, s"Read ${receivedBytes} bytes")
+              trace(conn, s"Write ${sentBytes} bytes ")
             }
             conn
           }
