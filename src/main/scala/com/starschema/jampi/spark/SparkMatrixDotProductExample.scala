@@ -23,9 +23,9 @@ object SparkMatrixDotProductExample {
     val sc = spark.sparkContext
 
 
-    lazy val input = Array.fill[Int] (size * size) {1}
+    lazy val input = Array.fill[Double] (size * size) {1}
     val rdd = sc
-      .parallelize( Vector.fill[Array[Int]] (numExecutors) { Array.emptyIntArray } , numExecutors )
+      .parallelize( Vector.fill[Array[Double]] (numExecutors) { Array.emptyDoubleArray } , numExecutors )
       .map(_ => (input,input))
 
     val foo = rdd.barrier().mapPartitions { iter =>

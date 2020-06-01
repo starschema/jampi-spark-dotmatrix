@@ -31,7 +31,7 @@ import org.scalatest.matchers.should.Matchers._
 
 class DotProductTest extends FunSuite   {
 
-  test("int and float 64x64 matrices filled with 1") {
+  test("int, double and float 64x64 matrices filled with 1") {
     val size = 64
 
     val i = Array.fill[Int](size * size) { 1 }

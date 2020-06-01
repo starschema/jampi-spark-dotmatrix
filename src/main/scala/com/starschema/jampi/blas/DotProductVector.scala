@@ -154,15 +154,15 @@ object DotProductVector {
   */
   def mmulPanama(n: Int, left: Array[Double], right: Array[Double], result: Array[Double]): Unit = {
     val blockWidth = if (n >= 256) 512 else 256
-    val block_height = if (n >= 512) 8 else if (n >= 256) 16 else 32
-    var columnOffset = 0
+    val blockHeight = if (n >= 512) 8 else if (n >= 256) 16 else 32
 
-    while ( { columnOffset < n }) {
+    var columnOffset = 0
+    while ( {columnOffset < n }) {
       var rowOffset = 0
-      while ( { rowOffset < n }) {
+      while ( {rowOffset < n }) {
         for (i <- 0 until n) {
           var j = columnOffset
-          while ( { j < columnOffset + blockWidth && j < n }) {
+          while ( {j < columnOffset + blockWidth && j < n }) {
             var sum1 = DoubleVector.fromArray(D512, result, i * n + j)
             var sum2 = DoubleVector.fromArray(D512, result, i * n + j + 8)
             var sum3 = DoubleVector.fromArray(D512, result, i * n + j + 16)
@@ -172,16 +172,16 @@ object DotProductVector {
             var sum7 = DoubleVector.fromArray(D512, result, i * n + j + 48)
             var sum8 = DoubleVector.fromArray(D512, result, i * n + j + 56)
             var k = rowOffset
-            while ( { k < rowOffset + block_height && k < n } ) {
+            while ( {k < rowOffset + blockHeight && k < n }) {
               val multiplier = DoubleVector.broadcast(D512, left(i * n + k))
-              sum1 = sum1.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j)))
-              sum2 = sum2.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 8)))
-              sum3 = sum3.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 16)))
-              sum4 = sum4.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 24)))
-              sum5 = sum5.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 32)))
-              sum6 = sum6.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 40)))
-              sum7 = sum7.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 48)))
-              sum8 = sum8.add(multiplier.mul(DoubleVector.fromArray(D512, right, k * n + j + 56)))
+              sum1 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j), sum1)
+              sum2 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j + 8), sum2)
+              sum3 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j + 16), sum3)
+              sum4 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j + 24), sum4)
+              sum5 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j + 32), sum5)
+              sum6 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j + 40), sum6)
+              sum7 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j + 48), sum7)
+              sum8 = multiplier.fma(DoubleVector.fromArray(D512, right, k * n + j + 56), sum8)
 
               k += 1
             }
@@ -198,7 +198,7 @@ object DotProductVector {
           }
         }
 
-        rowOffset += block_height
+        rowOffset += blockHeight
       }
 
       columnOffset += blockWidth
