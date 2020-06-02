@@ -46,22 +46,7 @@ class DotProductVectorTest extends FunSuite   {
     result
   }
 
-  def mmul_naive[T:Numeric](a: Array[T], b: Array[T], c: Array[T], n: Int): Unit = {
-    import Numeric.Implicits._
 
-    var in = 0
-    for (i <- 0 until n) {
-      var kn = 0
-      for (k <- 0 until n) {
-        val aik = a(in + k)
-        for (j <- 0 until n) {
-          c(in + j) += aik * b(kn + j)
-        }
-        kn += n
-      }
-      in += n
-    }
-  }
 
   test("int 64x64 matrixes filled with 1") {
     val size = 64
@@ -82,38 +67,41 @@ class DotProductVectorTest extends FunSuite   {
     val results1 = new Array[Int](size * size)
     val results2 = new Array[Int](size * size)
 
-    time( mmul_naive(random1,random2,results1,size) )
+    time( DotProductVector.mmul_naive(random1,random2,results1,size) )
     time( DotProductVector.mmulPanama(size,random1,random2,results2) )
 
     assert( results1.deep == results2.deep )
   }
 
-  test("compare 64x64 double results with naive implementation") {
-    val size = 64
+  test("compare 1024x1024 double results with naive implementation") {
+    val size = 1024
     val Eps = 1e-3.toFloat
 
     val random1 = Array.fill[Double](size * size) { scala.util.Random.nextDouble() % 10000 }
     val random2 = Array.fill[Double](size * size) { scala.util.Random.nextDouble() % 10000 }
     val results1 = new Array[Double](size * size)
     val results2 = new Array[Double](size * size)
+    val results3 = new Array[Double](size * size)
 
-    time( mmul_naive(random1,random2,results1,size) )
+    time( DotProductVector.mmul_naive(random1,random2,results1,size) )
     time( DotProductVector.mmulPanama(size,random1,random2,results2) )
+    time( DotProductVector.fastBuffered(size,random1,random2,results3) )
 
-    assert( results1.deep == results2.deep )
-    //for (i <- 0 until results1.size) results1(i) should be (results2(i) +- Eps)
+    //assert( results1.deep == results2.deep )
+    for (i <- 0 until results1.size) results1(i) should be (results2(i) +- Eps)
+    for (i <- 0 until results1.size) results1(i) should be (results3(i) +- Eps)
   }
 
   test("compare 64x64 float results with naive implementation") {
-    val size = 64
+    val size = 1024
     val Eps = 1e-3.toFloat // Our epsilon
     val random1 = Array.fill[Float](size * size) { scala.util.Random.nextFloat }
     val random2 = Array.fill[Float](size * size) { scala.util.Random.nextFloat }
     val results1 = new Array[Float](size * size)
     val results2 = new Array[Float](size * size)
 
-    mmul_naive(random1,random2,results1,size)
-    DotProductVector.mmulPanama(size,random1,random2,results2)
+    time(DotProductVector.mmul_naive(random1,random2,results1,size))
+    time(DotProductVector.mmulPanama(size,random1,random2,results2))
 
     for (i <- 0 until results1.size) results1(i) should be (results2(i) +- Eps)
   }

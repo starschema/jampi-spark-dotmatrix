@@ -205,4 +205,46 @@ object DotProductVector {
     }
   }
 
+
+  def mmul_naive[T:Numeric](a: Array[T], b: Array[T], c: Array[T], n: Int): Unit = {
+    import Numeric.Implicits._
+
+    var in = 0
+    for (i <- 0 until n) {
+      var kn = 0
+      for (k <- 0 until n) {
+        val aik = a(in + k)
+        for (j <- 0 until n) {
+          c(in + j) += aik * b(kn + j)
+        }
+        kn += n
+      }
+      in += n
+    }
+  }
+
+  def fastBuffered(n: Int, a: Array[Double], b: Array[Double], c: Array[Double]): Unit = {
+    val bBuffer = new Array[Double](n)
+    val cBuffer = new Array[Double](n)
+    var in = 0
+    for (i <- 0 until n) {
+      var kn = 0
+      for (k <- 0 until n) {
+        val aik = a(in + k)
+        System.arraycopy(b, kn, bBuffer, 0, n)
+        saxpy(n, aik, bBuffer, cBuffer)
+        kn += n
+      }
+      System.arraycopy(cBuffer, 0, c, in, n)
+      java.util.Arrays.fill(cBuffer, 0f)
+      in += n
+    }
+  }
+
+
+  private def saxpy(n: Int, aik: Double, b: Array[Double], c: Array[Double]): Unit = {
+    for (i <- 0 until n) {
+      c(i) = Math.fma(aik, b(i), c(i))
+    }
+  }
 }
