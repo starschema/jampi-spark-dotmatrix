@@ -31,7 +31,9 @@ import java.nio.{ByteBuffer, IntBuffer}
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers._
 
-class ShiftDataTest extends FunSuite {
+import scala.util.Try
+
+class PeerMessageTest extends FunSuite {
 
   def getIntBuffers(size: Int,fill: => Integer) : (ByteBuffer,ByteBuffer) = {
     val destBuffer = ByteBuffer.allocate(4 * size * size)
@@ -48,8 +50,8 @@ class ShiftDataTest extends FunSuite {
 
   def getRandomIntBuffers(size: Int) : (ByteBuffer,ByteBuffer) = getIntBuffers(size, scala.util.Random.nextInt(1000))
 
-  def socketsShouldBeOpen(sp: SocketPool, boolean: Boolean) = {
-    sp.clientSocket.isOpen should be (boolean)
+  def socketsShouldBeOpen(sp: PeerConnection, boolean: Boolean) = {
+    sp.clientSocket.get.isOpen should be (boolean)
 
     sp.clientServerSocket match {
       case Some(clientServerSocket) => clientServerSocket.isOpen should be (boolean)
@@ -59,30 +61,31 @@ class ShiftDataTest extends FunSuite {
 
   test("Connect pier local (1-thread)") {
     // connect sockets
-    val sp = ShiftData.connectPier(1111,"127.0.0.1",1111)
+    val sp = PeerConnection.connectPier(1111,"127.0.0.1",1111).get
     socketsShouldBeOpen(sp,true)
 
     // close sockets
-    SocketPool.close(sp)
+    PeerConnection.close(sp)
     socketsShouldBeOpen(sp,false)
   }
 
   test("Shift data single thread")
   {
-    val (sourceBuffer,destBuffer) = getRandomIntBuffers(64)
+    val (sourceBuffer,destBuffer) = getRandomIntBuffers(128)
+    val conn = PeerConnection
+      .connectPier( 1111,"127.0.0.1",1111)
+      .get
+      .copy(sendBuffer=sourceBuffer, receiveBuffer=destBuffer)
 
     // connect sockets
-    val sp = ShiftData.shiftBuffer(
-      ShiftData.connectPier( 1111,"127.0.0.1",1111),
-      sourceBuffer,
-      destBuffer)
-    socketsShouldBeOpen(sp,true)
+    val sp = PeerMessage.shiftBuffer(conn)
+    socketsShouldBeOpen(sp.get,true)
 
     assert( sourceBuffer === destBuffer)
 
     // close sockets
-    SocketPool.close(sp)
-    socketsShouldBeOpen(sp,false)
+    PeerConnection.close(sp.get)
+    socketsShouldBeOpen(sp.get,false)
   }
 
   test("Shift data 2-threads") {
@@ -91,30 +94,31 @@ class ShiftDataTest extends FunSuite {
 
       def run {
         val (sourceBuffer,destBuffer) = getIntBuffers(64,sourcePort)
+        val conn = PeerConnection
+          .connectPier( sourcePort,"127.0.0.1",destPort)
+          .get
+          .copy(sendBuffer=sourceBuffer, receiveBuffer=destBuffer)
 
-        val sp = ShiftData.shiftBuffer(
-          ShiftData.connectPier(sourcePort,"127.0.0.1",destPort),
-          sourceBuffer,
-          destBuffer)
-        socketsShouldBeOpen(sp,true)
+        val sp = PeerMessage.shiftBuffer(conn)
+        socketsShouldBeOpen(sp.get,true)
 
         // check first element
         destBuffer.rewind()
-        destBuffer.asIntBuffer().get(0) should be (destPort)
+        sp.get.receiveBuffer.asIntBuffer().get(0) should be (destPort)
 
         // check last element
         destBuffer.rewind()
         destBuffer.asIntBuffer().get( sourceBuffer.limit() / 4 - 1) should be (destPort)
 
         // close sockets
-        SocketPool.close(sp)
-        socketsShouldBeOpen(sp,false)
+        PeerConnection.close(sp.get)
+        socketsShouldBeOpen(sp.get,false)
       }
 
     }
 
-    val tp1 = new Thread( ThreadProcessor(1111,1112) )
-    val tp2 = new Thread( ThreadProcessor(1112,1111) )
+    val tp1 = new Thread( ThreadProcessor(1211,1212) )
+    val tp2 = new Thread( ThreadProcessor(1212,1211) )
 
     tp1.start()
     tp2.start()
@@ -123,11 +127,25 @@ class ShiftDataTest extends FunSuite {
 
   }
 
+  test("Array shift ") {
+    val size = 64
+    val sp = PeerConnection.connectPier( 1111,"127.0.0.1",1111)
+    val array = Array.fill[Int] (size*size) {0}
+
+    PeerMessage.shiftArray(sp.get, array)
+
+  }
+
   test("Buffer tests ")  {
     val inta = Array[Int](1,2,3,4,5)
-    val intb = IntBuffer.wrap(inta)
+    val a2 = new Array[Int] (100)
 
     val bb = ByteBuffer.allocateDirect(100)
+
+    bb.asIntBuffer().put(inta)
+
+    bb.put("1234".getBytes())
+    val a = bb.asIntBuffer().get(a2)
 
    // bb.asIntBuffer().
   }
