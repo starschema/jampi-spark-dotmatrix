@@ -26,6 +26,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.starschema.jampi.spark
 
-object BlockMatrixMultiplyExample {
+import org.apache.log4j.Logger
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix}
 
+object BlockMatrixMultiplyExample {
+  @transient lazy val log = Logger.getLogger(getClass.getName)
+
+  def main(args: Array[String]) {
+    val size = 10240
+
+    val spark = SparkSession.builder
+      .appName("MLlib BlockMatrixMultiply example")
+      .getOrCreate()
+
+    val sc = spark.sparkContext
+
+
+    val line = Vectors.dense( Array.fill[Double](size) { 1 } )
+
+    val mARows = sc.parallelize(1 to size ).map( idx => IndexedRow(idx-1, line))
+
+    val blockMat = new IndexedRowMatrix(mARows).toBlockMatrix()
+
+    blockMat.multiply(blockMat).blocks.count()
+
+    sc.stop()
+  }
 }

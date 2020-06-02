@@ -49,7 +49,6 @@ object SparkMatrixDotProductExample {
 
     val sc = spark.sparkContext
 
-    val conf = sc.getConf.getAll
 
     lazy val input = Array.fill[Double] (size * size) {1}
     val rdd = sc

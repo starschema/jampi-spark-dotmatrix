@@ -100,12 +100,12 @@ object DotProductVector {
     val blockHeight = if (n >= 512) 8 else if (n >= 256) 16 else 32
 
     var columnOffset = 0
-    while ( {columnOffset < n }) {
+    while ( columnOffset < n ) {
       var rowOffset = 0
-      while ( {rowOffset < n }) {
+      while ( rowOffset < n ) {
         for (i <- 0 until n) {
           var j = columnOffset
-          while ( {j < columnOffset + blockWidth && j < n }) {
+          while ( j < columnOffset + blockWidth && j < n ) {
             var sum1 = FloatVector.fromArray(F256, result, i * n + j)
             var sum2 = FloatVector.fromArray(F256, result, i * n + j + 8)
             var sum3 = FloatVector.fromArray(F256, result, i * n + j + 16)
@@ -115,7 +115,7 @@ object DotProductVector {
             var sum7 = FloatVector.fromArray(F256, result, i * n + j + 48)
             var sum8 = FloatVector.fromArray(F256, result, i * n + j + 56)
             var k = rowOffset
-            while ( {k < rowOffset + blockHeight && k < n }) {
+            while ( k < rowOffset + blockHeight && k < n ) {
               val multiplier = FloatVector.broadcast(F256, left(i * n + k))
               sum1 = multiplier.fma(FloatVector.fromArray(F256, right, k * n + j), sum1)
               sum2 = multiplier.fma(FloatVector.fromArray(F256, right, k * n + j + 8), sum2)
