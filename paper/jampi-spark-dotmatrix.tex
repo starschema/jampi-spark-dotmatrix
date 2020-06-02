@@ -78,20 +78,40 @@
 \section{Introduction} % (fold)
 \label{sec:introduction}
 
-The matrix multiplication operation $\star$ for an $p \times q$ matrix $\mathbf{A}$ and an $q \times r$ matrix $B$ is defined so that for the resultant matrix $\mathbf{C} = \mathbf{A} \star \mathbf{B}$, each element $c_{i, j}$ is the dot product of the $i$-th row of $\mathbf{A}$ and the $j$-th row of $\mathbf{B}$, i.e.
+The recent decade has seen the emergence of two immensely powerful processes in tandem: the rise of big data handling solutions like Apache Spark on one hand and the apotheosis of deep learning as the tool of choice for demanding computational solutions for machine learning problems. Yet at its essence, big data and deep learning remain not only separate communities but also significantly separate domains of software. Despite deep learning over big data becoming a crucial tool in a range of applications, including in computer vision,\cite{guo2016deep,voulodimos2018deep}  bioinformatics,\cite{spencer2014deep,alipanahi2015predicting,zhang2016deep,wei2018prediction} natural language processing (NLP),\cite{deselaers2009deep,socher2012deep,young2018recent,otter2020survey} clinical medicine,\cite{bar2015chest,havaei2016deep,liu2017detecting,stead2018clinical,campanella2019clinical,lehman2019mammographic} anomaly detection in cybersecurity and fraud detection,\cite{du2017deeplog,shone2018deep,chalapathy2019deep} and collaborative intelligence/recommender systems,\cite{wang2015collaborative,deng2016deep,karatzoglou2017deep,batmaz2019review} its full potential remains to be harnessed. The primary impediment in this respect is largely a divergence of attitudes and concerns, leading to two divergent paradigms of development:
 
-$$ c_{i, j} = \sum_{k = 1}^n a_{i, k} b_{k, j} $$
+\begin{itemize}
+	\item \emph{The big data paradigm}, primarily designed around RDDs and the the DataFrame-based API. This outlook has dominated the development of Apache Spark.
+	\item \emph{The DL/ML paradigm}, which is primarily focused on efficient linear algebra operations to facilitate machine learning approaches, especially matrix algebra for deep neural networks.
+\end{itemize}
 
-Matrix multiplication plays a significant role in a range of practical applications, including (but not limited to) scientific computing, non-linear modelling, agent-based models and the training of deep convolutional neural networks (deep learning). Deep learning has become a crucial tool for both research and commercial applications, including in computer vision,\cite{guo2016deep,voulodimos2018deep}  bioinformatics,\cite{spencer2014deep,alipanahi2015predicting,zhang2016deep,wei2018prediction} natural language processing (NLP),\cite{deselaers2009deep,socher2012deep,young2018recent,otter2020survey} clinical medicine,\cite{bar2015chest,havaei2016deep,liu2017detecting,stead2018clinical,campanella2019clinical,lehman2019mammographic} anomaly detection in cybersecurity and fraud detection,\cite{du2017deeplog,shone2018deep,chalapathy2019deep} and collaborative intelligence/recommender systems.\cite{wang2015collaborative,deng2016deep,karatzoglou2017deep,batmaz2019review} The proliferation of deep learning as the cognitive technology of choice for problems with large source data sets and high-dimensional or high-order multivariate data means that efficiency gains in the underlying linear algebra primitives has the potential to enable significant performance benefits in a wide range of use cases. In particular, constructing primitives that leverage computational capacity through rapid parallel computation and efficient interchange lends itself as an avenue towards these performance gains. While packages comprising efficient matrix primitives already exist,\cite{chetlur2014cudnn} these often operate at a low level and do not integrate well with existing and proven solutions to manage large computational loads. In particular, few integrate with Apache Spark,\cite{zaharia2016apache} by far one of the most widely used large distributed cluster computing frameworks at the time of writing, and those that do are relatively less efficient.
+The future of deep learning over big data depends greatly on facilitating the convergence of these two worlds into a single, unified paradigm: the use of well-designed big data management tools, such as Apache Spark, to interoperate with the demands of deep learning. The road towards this convergence depends on the development of efficient matrix primitives that facilitate rapid calculations over distributed networks and large data sets.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\linewidth]{figures/fig1.pdf}
+	\vspace{14pt}
+	\caption{Comparative execution models: Apache Spark versus distributed training for neural networks.}
+	\label{fig:execution-models}
+\end{figure}
+
+The current execution model of Apache Spark is principally focused on independent, embarrassingly parallel tasks that are run and scaled, but the needs of deep learning are primarily focused on distributed training: the performance of completely communicating and coordinating tasks, optimised for interconnectivity rather than independent parallel running, while also maintaining scalability and efficiency. With the recent introduction of the barrier execution mode in Apache Spark, it has finally become possible to construct a computational approach that allows for such networked execution to take place, facilitating distributed training of deep neural networks (see Figure~\ref{fig:execution-models}).
 
 JAMPI (Java Assisted Matrix Product with Inter-task communication), the framework described in this paper, is an efficient and rapid solution to an aspect of efficienty matrix primitives, namely matrix multiplication. By integrating JVM's new \texttt{Vector<>} API, \texttt{nio/netty} for distributed message passing and Spark's barrier mode, a pure Scala implementation of Cannon's 2.5D matrix multiplication algorithm can be devised that is significantly more efficient than \texttt{MLlib}'s \texttt{BlockMatrix.multiply} function. JAMPI thus avoids reliance on low level code on one hand, being a pure Scala implementation. On the other hand, it provides a pre-written framework that integrates with Spark as a native task rather than an external MPI procedure call, and handles inter-task communication directly, yielding performance benefits that would otherwise be associated with a low-level MPI implemented resource negotiation framework.
 
 \subsection{Cannon's algorithm} % (fold)
 \label{sub:cannon_s_algorithm}
 
+Matrix multiplication plays a significant role in a range of practical applications, including (but not limited to) scientific computing, non-linear modelling, agent-based models and the training of deep convolutional neural networks (deep learning). The proliferation of deep learning as the cognitive technology of choice for problems with large source data sets and high-dimensional or high-order multivariate data means that efficiency gains in the underlying linear algebra primitives has the potential to enable significant performance benefits in a wide range of use cases. In particular, constructing primitives that leverage computational capacity through rapid parallel computation and efficient interchange lends itself as an avenue towards these performance gains. While packages comprising efficient matrix primitives already exist,\cite{chetlur2014cudnn} these often operate at a low level and do not integrate well with existing and proven solutions to manage large computational loads.
+
+
+The matrix multiplication operation $\star$ for an $p \times q$ matrix $\mathbf{A}$ and an $q \times r$ matrix $B$ is defined so that for the resultant matrix $\mathbf{C} = \mathbf{A} \star \mathbf{B}$, each element $c_{i, j}$ is the dot product of the $i$-th row of $\mathbf{A}$ and the $j$-th row of $\mathbf{B}$, i.e.
+
+$$ c_{i, j} = \sum_{k = 1}^n a_{i, k} b_{k, j} $$
+
 The multiplication of square matrices constituites a special case. For a square matrix of order $n$, i.e. an $n \times n$ matrix, a special case obtains, which can be resolved efficiently using Cannon's algorithm.\cite{cannon1969cellular} 
 
-For a square matrix of order $n$, i.e. $n \times n$, Cannon's algoritm uses a toroidally connected mesh $\mathbf{P}^{n \times n}$ of $n^2$ processes. Rendered in pseudocode, the algorithm can be expressed as follows for $p$ processors:
+For a square matrix of order $n$, i.e. $n \times n$, Cannon's algorithm uses a toroidally connected mesh $\mathbf{P}^{n \times n}$ of $n^2$ processes. Rendered in pseudocode, the algorithm can be expressed as follows for $p$ processors:
 
 \begin{algorithmic}
 	\ForAll{i = 0 : $\sqrt{p}$ - 1}
