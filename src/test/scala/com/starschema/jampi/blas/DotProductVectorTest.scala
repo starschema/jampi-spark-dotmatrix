@@ -82,14 +82,17 @@ class DotProductVectorTest extends FunSuite   {
     val results1 = new Array[Double](size * size)
     val results2 = new Array[Double](size * size)
     val results3 = new Array[Double](size * size)
+    val results4 = new Array[Double](size * size)
 
     time( DotProductVector.mmul_naive(random1,random2,results1,size) )
     time( DotProductVector.mmulPanama(size,random1,random2,results2) )
     time( DotProductVector.fastBuffered(size,random1,random2,results3) )
+    time( DotProductVector.fastBuffered_v2(size,random1,random2,results4) )
 
     //assert( results1.deep == results2.deep )
     for (i <- 0 until results1.size) results1(i) should be (results2(i) +- Eps)
     for (i <- 0 until results1.size) results1(i) should be (results3(i) +- Eps)
+    for (i <- 0 until results1.size) results1(i) should be (results4(i) +- Eps)
   }
 
   test("compare 64x64 float results with naive implementation") {

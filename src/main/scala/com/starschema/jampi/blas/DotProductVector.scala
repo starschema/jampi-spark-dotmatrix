@@ -223,6 +223,13 @@ object DotProductVector {
     }
   }
 
+  def fastBuffered_v2(n: Int, a: Array[Double], b: Array[Double], c: Array[Double]): Unit = {
+    val c_new = c.clone()
+    fastBuffered(n,a,b,c_new)
+    for (i <- 0 until c.size)
+      c(i) += c_new(i)
+  }
+
   def fastBuffered(n: Int, a: Array[Double], b: Array[Double], c: Array[Double]): Unit = {
     val bBuffer = new Array[Double](n)
     val cBuffer = new Array[Double](n)

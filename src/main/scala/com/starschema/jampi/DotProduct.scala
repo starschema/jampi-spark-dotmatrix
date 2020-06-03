@@ -45,7 +45,8 @@ object DotProduct {
     (sa,sb,sc) match {
       case (a: Array[Int], b: Array[Int], c: Array[Int]) => DotProductVector.mmulPanama(p,a,b,c)
       case (a: Array[Float], b: Array[Float], c: Array[Float]) => DotProductVector.mmulPanama(p,a,b,c)
-      case (a: Array[Double], b: Array[Double], c: Array[Double]) => DotProductVector.mmulPanama(p,a,b,c)
+//      case (a: Array[Double], b: Array[Double], c: Array[Double]) => DotProductVector.mmulPanama(p,a,b,c)
+      case (a: Array[Double], b: Array[Double], c: Array[Double]) => DotProductVector.fastBuffered_v2(p,a,b,c)
       //case (a: Array[Double], b: Array[Double], c: Array[Double]) => DotProductVector.mmul_naive(a,b,c,p)
       case _ => throw new UnsupportedOperationException
     }
