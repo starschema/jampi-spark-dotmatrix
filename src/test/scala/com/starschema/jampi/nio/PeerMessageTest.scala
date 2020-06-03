@@ -61,7 +61,7 @@ class PeerMessageTest extends FunSuite {
 
   test("Connect pier local (1-thread)") {
     // connect sockets
-    val sp = PeerConnection.connectPier(1111,"127.0.0.1",1111).get
+    val sp = PeerConnection.connectPeer(1111,"127.0.0.1",1111).get
     socketsShouldBeOpen(sp,true)
 
     // close sockets
@@ -73,7 +73,7 @@ class PeerMessageTest extends FunSuite {
   {
     val (sourceBuffer,destBuffer) = getRandomIntBuffers(128)
     val conn = PeerConnection
-      .connectPier( 1111,"127.0.0.1",1111)
+      .connectPeer( 1111,"127.0.0.1",1111)
       .get
       .copy(sendBuffer=sourceBuffer, receiveBuffer=destBuffer)
 
@@ -95,7 +95,7 @@ class PeerMessageTest extends FunSuite {
       def run {
         val (sourceBuffer,destBuffer) = getIntBuffers(64,sourcePort)
         val conn = PeerConnection
-          .connectPier( sourcePort,"127.0.0.1",destPort)
+          .connectPeer( sourcePort,"127.0.0.1",destPort)
           .get
           .copy(sendBuffer=sourceBuffer, receiveBuffer=destBuffer)
 
@@ -129,7 +129,7 @@ class PeerMessageTest extends FunSuite {
 
   test("Array shift ") {
     val size = 64
-    val sp = PeerConnection.connectPier( 1111,"127.0.0.1",1111)
+    val sp = PeerConnection.connectPeer( 1111,"127.0.0.1",1111)
     val array = Array.fill[Int] (size*size) {0}
 
     PeerMessage.shiftArray(sp.get, array)

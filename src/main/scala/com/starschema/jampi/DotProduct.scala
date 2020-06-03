@@ -60,8 +60,8 @@ object DotProduct {
     val pi = CartesianTopology.getPosition(pos, p)
     val sc = new Array[T](sa.length)
 
-    val initialHorizontalSa = PeerConnection.connectPier(pi.pos, hostMap(pi.initial.left), pi.initial.left).get
-    val initialVerticalSa = PeerConnection.connectPier(pi.pos + 10000, hostMap(pi.initial.up), pi.initial.up + 10000).get
+    val initialHorizontalSa = PeerConnection.connectPeer(pi.pos, hostMap(pi.initial.left), pi.initial.left).get
+    val initialVerticalSa = PeerConnection.connectPeer(pi.pos + 10000, hostMap(pi.initial.up), pi.initial.up + 10000).get
 
     log(pi, "Sending sa to " + pi.initial.left + ", receiving from " + pi.initial.right)
     PeerMessage.shiftArray(initialHorizontalSa,sa)
@@ -72,8 +72,8 @@ object DotProduct {
     PeerConnection.close(initialVerticalSa)
 
     // TODO: fix port numbers
-    val horizontalSa = PeerConnection.connectPier(pi.pos + 1000, hostMap(pi.neighbors.left), pi.neighbors.left + 1000).get
-    val verticalSa = PeerConnection.connectPier(pi.pos + 11000, hostMap(pi.neighbors.up), pi.neighbors.up + 11000).get
+    val horizontalSa = PeerConnection.connectPeer(pi.pos + 1000, hostMap(pi.neighbors.left), pi.neighbors.left + 1000).get
+    val verticalSa = PeerConnection.connectPeer(pi.pos + 11000, hostMap(pi.neighbors.up), pi.neighbors.up + 11000).get
 
     for (i <- 0 until pi.p_sqrt) {
       mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)

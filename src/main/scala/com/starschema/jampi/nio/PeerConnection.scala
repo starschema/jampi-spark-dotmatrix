@@ -60,7 +60,7 @@ object PeerConnection {
     receiveBuffer = ByteBuffer.allocateDirect(DIRECT_BUFFER_LEN)
   )
 
-  def connectPier(sourcePort: Int, destHost: String, destPort: Int): Try[PeerConnection] = {
+  def connectPeer(sourcePort: Int, destHost: String, destPort: Int): Try[PeerConnection] = {
     val dest = new InetSocketAddress(destHost, destPort + PORTBASE)
     implicit val peerConnection : PeerConnection = PeerConnection.getPeerConnection(dest, sourcePort == destPort )
 
