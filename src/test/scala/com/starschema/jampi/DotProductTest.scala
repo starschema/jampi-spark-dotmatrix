@@ -50,14 +50,15 @@ class DotProductTest extends FunSuite   {
 
   test("int, double and float large matrices filled with 1") {
     val size = 1024
+    val hostMap = Array[String] ("127.0.0.1")
 
     val i = Array.fill[Int](size * size) { 1 }
     val f = Array.fill[Float](size * size) { 1 }
     val d = Array.fill[Double](size * size) { 1 }
 
-    val iresult = DotProduct.dotProduct(0, 1, i, i)
-    val fresult = DotProduct.dotProduct(0, 1, f, f)
-    val dresult = DotProduct.dotProduct(0, 1, d, d)
+    val iresult = DotProduct.dotProduct(0, 1, i, i, hostMap)
+    val fresult = DotProduct.dotProduct(0, 1, f, f, hostMap)
+    val dresult = DotProduct.dotProduct(0, 1, d, d, hostMap)
 
     iresult should contain only size
     fresult should contain only size

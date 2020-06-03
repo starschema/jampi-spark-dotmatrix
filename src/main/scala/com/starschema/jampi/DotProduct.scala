@@ -55,7 +55,7 @@ object DotProduct {
                                p: Integer,
                                sa: Array[T],
                                sb: Array[T],
-                               hostMap: Array[String] = Array.empty[String]): Array[T] =
+                               hostMap: Array[String]): Array[T] =
   {
     val pi = CartesianTopology.getPosition(pos, p)
     val sc = new Array[T](sa.length)
@@ -75,14 +75,16 @@ object DotProduct {
     val horizontalSa = PeerConnection.connectPier(pi.pos + 1000, hostMap(pi.neighbors.left), pi.neighbors.left + 1000).get
     val verticalSa = PeerConnection.connectPier(pi.pos + 11000, hostMap(pi.neighbors.up), pi.neighbors.up + 11000).get
 
-    for (i <- 0 to pi.p_sqrt - 1) {
+    for (i <- 0 until pi.p_sqrt) {
       mmul( Math.sqrt(sa.length).toInt, sa, sb, sc)
 
-      // last shift is not required if we don't use sa/sb
-      log(pi, "iter " + i + " sending sa to " + pi.neighbors.left + ", receiving from " + pi.neighbors.right)
-      PeerMessage.shiftArray(horizontalSa, sa)
-      log(pi, "iter " + i + " sending sb to " + pi.neighbors.up + ", receiving from " + pi.neighbors.down)
-      PeerMessage.shiftArray(verticalSa, sb)
+      if (i != pi.p_sqrt-1 ) {
+        // shift is not required in last iteration
+        log(pi, "iter " + i + " sending sa to " + pi.neighbors.left + ", receiving from " + pi.neighbors.right)
+        PeerMessage.shiftArray(horizontalSa, sa)
+        log(pi, "iter " + i + " sending sb to " + pi.neighbors.up + ", receiving from " + pi.neighbors.down)
+        PeerMessage.shiftArray(verticalSa, sb)
+      }
     }
 
     PeerConnection.close(horizontalSa)
