@@ -36,12 +36,12 @@ object SparkMatrixDotProductExample {
   @transient lazy val log = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]) {
-    val size = 64
+    val size = 2560
     val numExecutors= 16
 
     val spark = SparkSession.builder
       .appName("JAMPI dotMatrix Multiplication")
-      .config("spark.master", f"local[${numExecutors}]")
+//      .config("spark.master", f"local[${numExecutors}]")
 //      .config("spark.master", "spark://ec2-34-213-46-159.us-west-2.compute.amazonaws.com:7077")
 //      .config("spark.eventLog.dir", "file:/tmp/spark-events")
 //      .config("spark.eventLog.enabled",true)
@@ -67,7 +67,6 @@ object SparkMatrixDotProductExample {
     }
 
     val ret = foo.mean()
-    //val ret = foo.collect()
 
     log.info(s"ret head is ${ret} while expected is ${size * Math.sqrt(numExecutors)}")
 
