@@ -36,8 +36,8 @@ object SparkMatrixDotProductExample {
   @transient lazy val log = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]) {
-    val size = if (args.size > 0) args(0).toInt else 2560
     val numExecutors=  if (args.size > 1) args(1).toInt else  16
+    val size = if (args.size > 0) (args(0).toInt / Math.sqrt(numExecutors) ).toInt else 1024
 
     val spark = SparkSession.builder
       .appName("JAMPI dotMatrix Multiplication")
