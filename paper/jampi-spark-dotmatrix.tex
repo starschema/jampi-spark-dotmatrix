@@ -61,7 +61,7 @@
 %	ABSTRACT
 %----------------------------------------------------------------------------------------
 
-\Abstract{The new barrier mode in Apache Spark allows embedding distributed deep learning training as a Spark stage to simplify the distributed training workflow. In Spark, a task in a stage doesn’t depend on any other tasks in the same stage, and hence it can be scheduled independently. However, several algorithms require more sophisticated inter-task communications, similar to the MPI paradigm. By combining distributed message passing  (using nio/netty), JVM's new \texttt{Vector<>} API and Spark's barrier mode, we can add non-map/reduce based algorithms, such as Cannon's distributed matrix multiplication, improving the performance of the existing MLlib implementation. This paper discloses an efficient distributed matrix multiplication algorithm within a barrier task, which results in an XXX\% performance increase on a 10,000x10,000 square matrix. Applications of efficient matrix multiplication include significantly accelerating the training and implementation of deep convolutional neural network based workloads.}
+\Abstract{The new barrier mode in Apache Spark allows embedding distributed deep learning training as a Spark stage to simplify the distributed training workflow. In Spark, a task in a stage doesn’t depend on any other tasks in the same stage, and hence it can be scheduled independently. However, several algorithms require more sophisticated inter-task communications, similar to the MPI paradigm. By combining distributed message passing (using asynchronous network io), OpenJDK's new autovectorization and Spark's barrier mode, we can add non-map/reduce based algorithms, such as Cannon's distributed matrix multiplication, improving the performance of the existing MLlib implementation. This paper discloses an efficient distributed matrix multiplication algorithm within a barrier task, which results in an XXX\% performance increase on a 10,000x10,000 square matrix with XXX\% less memory footprint. Applications of efficient matrix multiplication include significantly accelerating the training and implementation of deep convolutional neural network based workloads.}
 
 %----------------------------------------------------------------------------------------
 
@@ -157,10 +157,10 @@ Standard methods of multiplying dense matrices require $O(n^3)$ floating operati
 
 % subsection matrix_multiplication_as_a_barrier_task (end)
 
-\subsection{Vector unrolling} % (fold)
-\label{sub:vector_unrolling}
+\subsection{Vectorization using Panama OpenJDK} % (fold)
+\label{sub:vector_panama}
 
-% subsection vector_unrolling (end)
+% subsection vector_panama (end)
 
 \subsection{Inter-node communication} % (fold)
 \label{sub:inter_node_communication}
