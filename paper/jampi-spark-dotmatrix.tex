@@ -177,6 +177,17 @@ Standard methods of multiplying dense matrices require $O(n^3)$ floating operati
 \section{Results} % (fold)
 \label{sec:results}
 
+Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior (Figure~\ref{fig:runtimes})
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{figures/runtimes.pdf}
+	\vspace{14pt}
+	\caption{Comparative execution times between JAMPI, MPI, MLlib and MLlib (p64) over $n \times n$ matrices of different sizes.}
+	\label{fig:runtimes}
+\end{figure}
+
+
 % section results (end)
 
 \section{Conclusion} % (fold)
