@@ -1,0 +1,24 @@
+MPI, 256 processors, 51200x51200 matrix
+
+(base) [ec2-user@ip-172-30-2-145 Parallel-Computing-MPI-Matrix-Multiplication]$ mpirun -n 256 -f /tmp/hosts-2 `pwd`/hw4 supporting/$i supporting/$i out
+id=11, coord[0,11]: read submatrix of A of dims 51200x51200
+id=4, coord[0,4]: read submatrix of A of dims 51200x51200
+id=5, coord[0,5]: read submatrix of A of dims 51200x51200
+id=1, coord[0,1]: read submatrix of A of dims 51200x51200
+id=3, coord[0,3]: read submatrix of A of dims 51200x51200
+id=2, coord[0,2]: read submatrix of A of dims 51200x51200
+id=8, coord[0,8]: read submatrix of A of dims 51200x51200
+id=10, coord[0,10]: read submatrix of A of dims 51200x51200
+id=15, coord[0,15]: read submatrix of A of dims 51200x51200
+id=9, coord[0,9]: read submatrix of A of dims 51200x51200
+id=14, coord[0,14]: read submatrix of A of dims 51200x51200
+id=7, coord[0,7]: read submatrix of A of dims 51200x51200
+id=12, coord[0,12]: read submatrix of A of dims 51200x51200
+id=6, coord[0,6]: read submatrix of A of dims 51200x51200
+id=13, coord[0,13]: read submatrix of A of dims 51200x51200
+Fatal error in PMPI_Send: Unknown error class, error stack:
+PMPI_Send(159).............: MPI_Send(buf=0x7f1edbed1410, count=3200, MPI_DOUBLE, dest=33, tag=0, comm=0x84000004) failed
+MPID_nem_tcp_connpoll(1845): Communication error with rank 33: Connection refused
+
+
+
