@@ -162,30 +162,89 @@ While this functionality is sufficient to support the primary use case of Spark'
 \subsection{Cannon's algorithm on MPI} % (fold)
 \label{sub:cannon_s_algorithm_on_mpi}
 
+<<<<<<< HEAD
 The MPI version of the algorithm described in Subsection~\ref{sub:cannon_s_algorithm} relies on MPI's Cartesian topology. After setting up a 2D communication grid of processors with \texttt{MPI\_Cart\_create}, processors exchange data with their neighbors by calling \texttt{MPI\_Sendrecv\_replace}. In the main loop, each processor executes a local dot product calculation, then shifts the results horizontally for matrix \texttt{a} and vertically for matrix \texttt{b}. In our benchmarks, we used \texttt{MPICH} version 3.3.2 as the underlying MPI implementation.
+=======
+The MPI version of the algorithm relies on MPI's cartesian topology. After setting up the 2D communication grid with \texttt{MPI\_Cart\_create}, processors exchange data with their neighbors by calling \texttt{MPI\_Sendrecv\_replace}. In the main loop, each processor executes a local dot product calculation, then shift the results horizontally for matrix  $\mathbf{A}$  and vertically for matrix  $\mathbf{B}$. In our benchmarks we used \texttt{MPICH} version 3.3.2 as MPI implementation.
+
+To speed up matrix multiplication, we applied \texttt{-O4} \texttt{-ftree-vectorize} \texttt{-march=native} GNU C compiler flags to ensure vectorized code execution. By vectorization, we refer using SIMD (Single Instruction, Multiple Data) CPU features, more precisly Advanced Vector Extensions (AVX-512F) that allows faster execution of fused multiply–add (\texttt{{FMAC}}) operations in local/partial matrix dot product steps. After compilating our code with GCC 7.3.1 we ensured that the disassembed code contains \texttt{vfmadd231sd} instruction for vectorized \texttt{FMAC}. 
+>>>>>>> 3b97913c687f55366ca5863ee6b02b8122d0b3fc
 
 To speed up matrix multiplication, we applied the GNU C compiler flags to \texttt{-O4} \texttt{-ftree-vectorize} \texttt{-march=native} in order to ensure vectorized code execution. By vectorization, we refer to using SIMD (Single Instruction, Multiple Data) CPU features, more specifically Advanced Vector Extensions (AVX-512) that allow for a faster execution of fused multiply–add (\texttt{{FMAC}}) operations in local/partial matrix dot product steps. After compiling our code using GCC 7.3.1, we verified the presence of vectorized \texttt{FMAC} by checking disassembled code for \texttt{vfmadd231sd} instruction using \texttt{xmmX} registers.
 
 % subsection cannon_s_algorithm_on_mpi (end)
 
-\subsection{Matrix multiplication as a barrier task} % (fold)
-\label{sub:matrix_multiplication_as_a_barrier_task}
+\subsection{JAMPI} % (fold)
+\label{sub:jampi_implementation}
 
-% subsection matrix_multiplication_as_a_barrier_task (end)
+JAMPI is a from scratch built, native Scala implementation of the Cannon's algorithm. For message passing, we built an \texttt{nio} based asynchronous message passing library, that mimics MPI's cartesian topology and send-recv-replace functionality. To avoid unnecessary memory copies and to optimize performance for both throughput and latency, our \texttt{PeerMessage} object allocates fixed 8MB off-heap buffers for both sending and receiving data. Sending and receiving network operations are executed in parallel asynchronously.
+
+The matrix multiplication is embedded into a Barrier Execution Task, and it takes the number of partitions,  the local partition ID, the hostnames for the other partitions (\texttt{address} from \texttt{BarrierTaskContext.getTaskInfos()}) along with the local matrix pairs from the \texttt{RDD}.  
+
+\begin{lstlisting}
+def dotProduct[T : ClassTag](
+  partitionId: Integer,
+  numOfPartitions: Integer,
+  hostMap: Array[String],
+  matrixA: Array[T],
+  MatrixB: Array[T]): Array[T] 
+\end{lstlisting}
+
+JAMPI supports \texttt{double}, \texttt{float} and \texttt{int} java primitive data types passed as Java \texttt{Array}s.
+
+% subsection jampi_implementation (end)
 
 \subsection{Vectorization using Panama OpenJDK} % (fold)
 \label{sub:vector_panama}
 
+In order to achieve performance in par with the optimized MPI implementation for local dot product steps, we used JVM's native vector intricts and superword optimization capabilities for both Jampi and MLlib Spark applications benchmarks. 
+The latest, most comprehensive vectorization support in JVM is found in \texttt{Vector API} module, part of OpenJDK's \emph{Project Panama}. While the \texttt{Vector API} is currently in incubator, we considered stable enough to use it for both the Spark platform and application code. 
+
+For fair benchmarking, we avoided using \texttt{Vector<>} objects or advanced methods like manual unrolling. While these techniques could potentially further improve performance, our goals were to compare the distributed algoritms' performance with the same CPU opcodes used in local matrix multiplications. From the JIT compiler outputs, we confirmed that both Spark applications were using \texttt{vfmadd231sd} as in the GCC compiled MPI version.
+
+To use the new vector intricts features, we built a custom OpenJDK package from panama/dev branch tip (\texttt{dev-442a69af7bad}).
+
+% 0x00007face057eaac:   vfmadd231sd %xmm2,%xmm0,%xmm1       ;*invokestatic fma {reexecute=0 rethrow=0 return_oop=0}
+% ; - com.starschema.jampi.blas.DotProductVector$::$anonfun$saxpy$1@12 (line 254)
+% ; - com.starschema.jampi.blas.DotProductVector$$$Lambda$5034/0x00000008019bc960::apply$mcVI$sp@13
+% ; - scala.collection.immutable.Range::foreach$mVc$sp@14 (line 158)
+% ; - com.starschema.jampi.blas.DotProductVector$::saxpy@24 (line 253)
+% ; - com.starschema.jampi.blas.DotProductVector$::$anonfun$fastBuffered$2@35 (line 242)
+% ; - com.starschema.jampi.blas.DotProductVector$$$Lambda$5033/0x00000008019bc568::apply$mcVI$sp@29
+
+The applied JVM flags were \texttt{--add-modules jdk.incubator.vector} and \texttt{ -XX:TypeProfileLevel=121} for both JAMPI and MLlib applilcations. 
+
 % subsection vector_panama (end)
 
-\subsection{Inter-node communication} % (fold)
-\label{sub:inter_node_communication}
+\subsection{Apache Spark MLlib}
 
-
-% subsection inter_node_communication (end)
+We used Apache Spark MLlib's built-in \texttt{BlockMatrix.multiply} as a baseline to compare with JAMPIs speed and resource usage. As MLlib's implementation is prone to be faster with more partitions than the total number of worker cores, we executed two tests for each scenario: one with number of partitions equal to worker cores and one where the number of partitions were equal to four times of the total worker cores. For the latter scenario we refer as \emph{overpartitiong}.
 
 \subsection{Test protocols} % (fold)
 \label{sub:test_protocols}
+
+All tests are executed Amazon Web Services EC2 instances using \texttt{m5} instance types with Intel(R) Xeon(R) Platinum 8175M CPUs and 4GB / cores RAM. Apache Spark version was 3.0.0-preview2 with separate master node. Driver process was initated from the master node and its resource consumption is not included in the results. For single code tests we disabled the second CPU core in the VM.  
+
+
+\begin{center}
+	\begin{tabular}{ |c|c|c|c| } 
+	 \hline
+	 total worker cores & instance type & no. nodes & partitions  \\ 
+	 \hline\hline
+	 1 & m5.large & 1 & 1 \\ 
+	 \hline
+	 16 & m5.xlarge & 4 & 4 \\ 
+	 \hline
+	 64 & m5.2xlarge & 8 & 8 \\ 
+	 \hline
+	 256 & m5.2xlarge & 32 & 8 \\ 
+	 \hline
+	\end{tabular}
+\end{center}
+	
+Applications reported only the dot product execution time with a single one value reducer (\texttt{avg}) to trigger \texttt{RDD} reduce/collection on Spark without moving substantial amount of data to the driver process. This excluded the MPI and Spark application startup times but included the time required to establish a Barrer Task Step during \texttt{RDD} reduce. We used 64bit floating point data types for matrix elements. 
+
+All test cases where executed at least ten times while execution times, CPU and memory consumptions were captured. 
 
 % subsection test_protocols (end)
 
