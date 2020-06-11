@@ -13,9 +13,16 @@
 
 \usepackage{etoolbox}
 
+\usepackage{listings}
+
+\usepackage[htt]{hyphenat}
+
 \usepackage{graphicx}
 
 \usepackage{algpseudocode}
+
+\lstdefinestyle{mystyle}{basicstyle=\ttfamily\footnotesize}
+\lstset{style=mystyle}
 
 \AtBeginEnvironment{quote}{\singlespace\vspace{-\topsep}\small}
 \AtEndEnvironment{quote}{\vspace{-\topsep}\endsinglespace}
@@ -48,10 +55,11 @@
 % \JournalInfo{..., 2020} % Journal information
 % \Archive{arXiv pre-print} % Additional notes (e.g. copyright, DOI, review/research article)
 
-\PaperTitle{JAMPI: efficient matrix multiplication in Spark using Barrier Mode} % Article title
+\PaperTitle{JAMPI: efficient matrix multiplication in Spark using Barrier Execution Mode} % Article title
 
-\Authors{Tamas Foldi\textsuperscript{1}*, Chris von Csefalvay\textsuperscript{1}} % Authors
+\Authors{Tamas Foldi\textsuperscript{1}*, Chris von Csefalvay\textsuperscript{1}, Nicolas A Perez\textsuperscript{2}} % Authors
 \affiliation{\textsuperscript{1}\textit{Starschema Inc., Arlington, VA.}} % Author affiliation
+\affiliation{\textsuperscript{1}\textit{Hewlett Packard Enterprise Co.,  Miami, FL.}} % Author affiliation
 \affiliation{*\textbf{Corresponding author}: tfoldi@starschema.net} % Corresponding author
 
 % \Keywords{Spark --- Matrix multiplication --- Algorithmic methods} % Keywords - if you don't want any simply remove all the text between the curly brackets
@@ -97,7 +105,7 @@ The future of deep learning over big data depends greatly on facilitating the co
 
 The current execution model of Apache Spark is principally focused on independent, embarrassingly parallel tasks that are run and scaled, but the needs of deep learning are primarily focused on distributed training: the performance of completely communicating and coordinating tasks, optimised for interconnectivity rather than independent parallel running, while also maintaining scalability and efficiency. With the recent introduction of the barrier execution mode in Apache Spark, it has finally become possible to construct a computational approach that allows for such networked execution to take place, facilitating distributed training of deep neural networks (see Figure~\ref{fig:execution-models}).
 
-JAMPI (Java Assisted Matrix Product with Inter-task communication), the framework described in this paper, is an efficient and rapid solution to an aspect of efficienty matrix primitives, namely matrix multiplication. By integrating JVM's new \texttt{Vector<>} API, \texttt{nio/netty} for distributed message passing and Spark's barrier mode, a pure Scala implementation of Cannon's 2.5D matrix multiplication algorithm can be devised that is significantly more efficient than \texttt{MLlib}'s \texttt{BlockMatrix.multiply} function. JAMPI thus avoids reliance on low level code on one hand, being a pure Scala implementation. On the other hand, it provides a pre-written framework that integrates with Spark as a native task rather than an external MPI procedure call, and handles inter-task communication directly, yielding performance benefits that would otherwise be associated with a low-level MPI implemented resource negotiation framework.
+JAMPI (Java Assisted Matrix Product with Inter-task communication), the framework described in this paper, is an efficient and rapid solution to an aspect of efficienty matrix primitives, namely matrix multiplication. By integrating JDK's new \texttt{Vector API}, asynchronous network IO (\texttt{nio}) for distributed message passing and Spark's barrier mode, a pure Scala implementation of Cannon's 2.5D matrix multiplication algorithm can be devised that is significantly more efficient than \texttt{MLlib}'s \texttt{BlockMatrix.multiply} function. JAMPI thus avoids reliance on foriegn, low level or native code in combination with \texttt{JNI} on one hand, being a pure Scala implementation. On the other hand, it provides a pre-written framework that integrates with Spark as a native task rather than an external MPI procedure call, and handles inter-task communication directly, yielding performance benefits that would otherwise be associated with a low-level MPI implemented resource negotiation framework.
 
 \subsection{Cannon's algorithm} % (fold)
 \label{sub:cannon_s_algorithm}
@@ -140,6 +148,10 @@ Standard methods of multiplying dense matrices require $O(n^3)$ floating operati
 \subsection{Spark's barrier mode} % (fold)
 \label{sub:spark_s_barrier_mode}
 
+Spark's Barrier Mode is part of Project Hydrogen\cite{projecthydrogensite} that introduces gang scheduling on top of MapReduce execution model to support distributed deep learning executed or embedded as Spark steps. The current implementation ensures that all tasks (limited to \texttt{mapPartitions}) executed in the same time, and collectively cancels and restarts them in case of failures. In addition to the true parallell execution, the worker hostnames, partition IDs are accessible inside the tasks as well as a \texttt{barrier} call, similar to MPI's \texttt{MPI\_Barrier} function \cite{projecthydrogenpres}.
+
+While these functionalities are sufficient to support Barrier's mode primary use case: namely executing embedded MPI or other, foreign (non-JVM and non-Spark) steps inside a Spark application, it does not provide any inter-task communication primitive to implement the same algoritms inside JVM/Spark native steps. In fact, Barrier Execution Mode's design documentation clearly sets this as a non-goal, stating that beyond a simple \texttt{BarrierTaskContext.barrier()} call no intra-communication functionality will be part of the implementation, as it is assumed to be handled by the user program. We see this as a clear showstopper for Spark distributed deep learning adoption, forcing the executions outside of Spark boundaries.
+
 % subsection spark_s_barrier_mode (end)
 
 % section introduction (end)
@@ -149,6 +161,12 @@ Standard methods of multiplying dense matrices require $O(n^3)$ floating operati
 
 \subsection{Cannon's algorithm on MPI} % (fold)
 \label{sub:cannon_s_algorithm_on_mpi}
+
+The MPI version of the algorithm relies on MPI's cartesian topology. After setting up the 2D communication grid with \texttt{MPI\_Cart\_create}, processors exchange data with their neighbors by calling \texttt{MPI\_Sendrecv\_replace}. In the main loop, each processor executes a local dot product calculation, then shift the results horizontally for matrix \texttt{a} and vertically for matrix \texttt{b}. In our benchmarks we used \texttt{MPICH} version 3.3.2 as MPI implementation.
+
+To speed up matrix multiplication, we applied \texttt{-O4} \texttt{-ftree-vectorize} \texttt{-march=native} GNU C compiler flags to ensure vectorized code execution. By vectorization, we refer using SIMD (Single Instruction, Multiple Data) CPU features, more precisly Advanced Vector Extensions (AVX-512F) that allows faster execution of fused multiply–add (\texttt{{FMAC}}) operations in local/partial matrix dot product steps. After compilating our code with GCC 7.3.1 we ensured that the disassembed code contains \texttt{vfmadd231sd} instruction using \texttt{xmmX} registers for vectorized \texttt{FMAC}. 
+
+
 
 % subsection cannon_s_algorithm_on_mpi (end)
 
@@ -164,6 +182,8 @@ Standard methods of multiplying dense matrices require $O(n^3)$ floating operati
 
 \subsection{Inter-node communication} % (fold)
 \label{sub:inter_node_communication}
+
+In or
 
 % subsection inter_node_communication (end)
 
@@ -201,7 +221,7 @@ Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI
 
 % \addcontentsline{toc}{section}{Acknowledgments} % Adds this section to the table of contents
 
-The authors wish to thank Anjan Banerjee for the discussions that inspired this paper. All errors and ommissions are the authors' own.
+All errors and ommissions are the authors' own.
 
 \phantomsection
 \section*{Competing interests} % The \section*{} command stops section numbering
