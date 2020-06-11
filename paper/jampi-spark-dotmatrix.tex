@@ -59,7 +59,7 @@
 
 \Authors{Tamas Foldi\textsuperscript{1}*, Chris von Csefalvay\textsuperscript{1}, Nicolas A Perez\textsuperscript{2}} % Authors
 \affiliation{\textsuperscript{1}\textit{Starschema Inc., Arlington, VA.}} % Author affiliation
-\affiliation{\textsuperscript{1}\textit{Hewlett Packard Enterprise Co.,  Miami, FL.}} % Author affiliation
+\affiliation{\textsuperscript{1}\textit{Hewlett Packard Enterprise,  Miami, FL.}} % Author affiliation
 \affiliation{*\textbf{Corresponding author}: tfoldi@starschema.net} % Corresponding author
 
 % \Keywords{Spark --- Matrix multiplication --- Algorithmic methods} % Keywords - if you don't want any simply remove all the text between the curly brackets
@@ -148,9 +148,9 @@ Standard methods of multiplying dense matrices require $O(n^3)$ floating operati
 \subsection{Spark's barrier mode} % (fold)
 \label{sub:spark_s_barrier_mode}
 
-Spark's Barrier Mode is part of Project Hydrogen\cite{projecthydrogensite} that introduces gang scheduling on top of MapReduce execution model to support distributed deep learning executed or embedded as Spark steps. The current implementation ensures that all tasks (limited to \texttt{mapPartitions}) executed in the same time, and collectively cancels and restarts them in case of failures. In addition to the true parallell execution, the worker hostnames, partition IDs are accessible inside the tasks as well as a \texttt{barrier} call, similar to MPI's \texttt{MPI\_Barrier} function \cite{projecthydrogenpres}.
+Spark's barrier mode is a new mode of execution introduced to Apache Spark as part of Project Hydrogen.\cite{projecthydrogensite} Barrier execution features gang scheduling on top of the MapReduce execution model to support distributed deep learning tasks that are executed or embedded as Spark steps. The current implementation ensures that all tasks (limited to \texttt{mapPartitions}) are executed at the same time, and collectively cancels and restarts all tasks in case of failure events. In addition to true parallel execution, the workers' host names and partition identifiers are accessible inside the tasks, alongside a \texttt{barrier} call, similar to MPI's \texttt{MPI\_Barrier} function.\cite{projecthydrogenpres}
 
-While these functionalities are sufficient to support Barrier's mode primary use case: namely executing embedded MPI or other, foreign (non-JVM and non-Spark) steps inside a Spark application, it does not provide any inter-task communication primitive to implement the same algoritms inside JVM/Spark native steps. In fact, Barrier Execution Mode's design documentation clearly sets this as a non-goal, stating that beyond a simple \texttt{BarrierTaskContext.barrier()} call no intra-communication functionality will be part of the implementation, as it is assumed to be handled by the user program. We see this as a clear showstopper for Spark distributed deep learning adoption, forcing the executions outside of Spark boundaries.
+While this functionality is sufficient to support the primary use case of Spark's barrier mode -- namely, executing embedded MPI or other foreign, i.e. non-Spark and non-JVM, steps within a Spark application --, it does not provide any inter-task communication primitive to implement the same algoritms within JVM/Spark native steps. In fact, the design documentation for Spark's barrier mode clearly defines this as outside the scope of the project, stating that beyond a simple \texttt{BarrierTaskContext.barrier()} call, no intra-communication functionality will be part of the implementation. It is assumed that such functionality would be handled by the user program. It is our view based on our extensive experience with implementing deep learning solutions on distributed systems that this is a clear show-stopper: if Spark is to be a force to be reckoned with as the data layer for deep learning applications over big data, it should not force execution outside Spark's boundaries.
 
 % subsection spark_s_barrier_mode (end)
 
@@ -162,11 +162,9 @@ While these functionalities are sufficient to support Barrier's mode primary use
 \subsection{Cannon's algorithm on MPI} % (fold)
 \label{sub:cannon_s_algorithm_on_mpi}
 
-The MPI version of the algorithm relies on MPI's cartesian topology. After setting up the 2D communication grid with \texttt{MPI\_Cart\_create}, processors exchange data with their neighbors by calling \texttt{MPI\_Sendrecv\_replace}. In the main loop, each processor executes a local dot product calculation, then shift the results horizontally for matrix \texttt{a} and vertically for matrix \texttt{b}. In our benchmarks we used \texttt{MPICH} version 3.3.2 as MPI implementation.
+The MPI version of the algorithm described in Subsection~\ref{sub:cannon_s_algorithm} relies on MPI's Cartesian topology. After setting up a 2D communication grid of processors with \texttt{MPI\_Cart\_create}, processors exchange data with their neighbors by calling \texttt{MPI\_Sendrecv\_replace}. In the main loop, each processor executes a local dot product calculation, then shifts the results horizontally for matrix \texttt{a} and vertically for matrix \texttt{b}. In our benchmarks, we used \texttt{MPICH} version 3.3.2 as the underlying MPI implementation.
 
-To speed up matrix multiplication, we applied \texttt{-O4} \texttt{-ftree-vectorize} \texttt{-march=native} GNU C compiler flags to ensure vectorized code execution. By vectorization, we refer using SIMD (Single Instruction, Multiple Data) CPU features, more precisly Advanced Vector Extensions (AVX-512F) that allows faster execution of fused multiply–add (\texttt{{FMAC}}) operations in local/partial matrix dot product steps. After compilating our code with GCC 7.3.1 we ensured that the disassembed code contains \texttt{vfmadd231sd} instruction using \texttt{xmmX} registers for vectorized \texttt{FMAC}. 
-
-
+To speed up matrix multiplication, we applied the GNU C compiler flags to \texttt{-O4} \texttt{-ftree-vectorize} \texttt{-march=native} in order to ensure vectorized code execution. By vectorization, we refer to using SIMD (Single Instruction, Multiple Data) CPU features, more specifically Advanced Vector Extensions (AVX-512) that allow for a faster execution of fused multiply–add (\texttt{{FMAC}}) operations in local/partial matrix dot product steps. After compiling our code using GCC 7.3.1, we verified the presence of vectorized \texttt{FMAC} by checking disassembled code for \texttt{vfmadd231sd} instruction using \texttt{xmmX} registers.
 
 % subsection cannon_s_algorithm_on_mpi (end)
 
@@ -183,7 +181,6 @@ To speed up matrix multiplication, we applied \texttt{-O4} \texttt{-ftree-vector
 \subsection{Inter-node communication} % (fold)
 \label{sub:inter_node_communication}
 
-In or
 
 % subsection inter_node_communication (end)
 
@@ -216,19 +213,19 @@ Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI
 % section conclusion (end)
 
 %------------------------------------------------
-\phantomsection
-\section*{Acknowledgments} % The \section*{} command stops section numbering
+% \phantomsection
+% \section*{Acknowledgments} % The \section*{} command stops section numbering
 
 % \addcontentsline{toc}{section}{Acknowledgments} % Adds this section to the table of contents
 
-All errors and ommissions are the authors' own.
+% All errors and ommissions are the authors' own.
 
 \phantomsection
 \section*{Competing interests} % The \section*{} command stops section numbering
 
 % \addcontentsline{toc}{section}{Acknowledgments} % Adds this section to the table of contents
 
-The authors have declared no competing interest.
+The authors have declared no competing interests.
 
 \phantomsection
 \section*{Funding statement} % The \section*{} command stops section numbering
