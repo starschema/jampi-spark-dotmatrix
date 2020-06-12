@@ -222,6 +222,7 @@ We used Apache Spark MLlib's built-in \texttt{BlockMatrix.multiply()} as a basel
 All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} instance types with Intel\textsuperscript{\textregistered} Xeon\textsuperscript{\textregistered} Platinum 8175M CPUs and 4GB RAM per core. Tests were conducted on Apache Spark 3.0.0-preview2 with a separate master node. The driver process was initiated from the master node, and its resource consumption is not included in the results. For single core tests, 2-core CPUs were used, with the second CPU core having been manually disabled in the VM.
 
 
+
 \begin{center}
 	\begin{tabular}{ |c|c|c|c| } 
 	 \hline
@@ -240,9 +241,38 @@ All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} 
 	
 Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices comprised of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption.
 
+
+\section{Scalability Analysis} % (fold)
+\label{sub:scalability_analysis}
+
+One important aspect of any distributed algorithm is its ability to scale up as the problem size increases since we need to make sure that the algorithm not only is fast enough to solve the problem in question, but also that is able to solve bigger instances of the problem every time. 
+
+There are intrinsic issues when scaling algorithms, for instance, it is known that the memory requirements for each processor increases as we add processors to the computation. Then, as we scale up, we need to measure how the memory requirements per processor is affected.
+
+SHOW ANALYSIS HERE???
+
+Analyzing Cannon's Algorithm yields that the memory requirements per processor increases linearly, which makes Cannon's Algorithm very scalable. Our MPI and JAMPI are direct implementations of Cannon's Algorithm, thus we can say that they both have the same scalability factor. 
+
+When we run our tests, we can see how memory increases as we add processors. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{figures/memory.png}
+	\vspace{14pt}
+	\caption{Comparative memory usage between JAMPI, MPI, MLlib}
+\end{figure}
+
+However, as we can see, MLLib memory increases quite fast, which indicates that its scalability factor is bigger than the one presented by Cannon's Algorithm. This is one of the limitation of MLLib and Spark compared to MPI and its direct implementation for Spark JAMPI. 
+
+In some of our tests, we cannot continue to scale MLlib while in MPI and JAMPI, we can simple increase the problem size along with the number of processors. These results are indications of scalability issues within MLlib in addition with its poor performance compared to MPI and JAMPI.
+
 % subsection test_protocols (end)
 
 % section methods (end)
+
+
+
+
 
 \section{Results} % (fold)
 \label{sec:results}
