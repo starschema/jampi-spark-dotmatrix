@@ -13,6 +13,8 @@
 
 \usepackage{etoolbox}
 
+\usepackage{graphicx}
+
 \usepackage{listings}
 
 \usepackage[htt]{hyphenat}
@@ -26,6 +28,9 @@
 
 \AtBeginEnvironment{quote}{\singlespace\vspace{-\topsep}\small}
 \AtEndEnvironment{quote}{\vspace{-\topsep}\endsinglespace}
+
+\graphicspath{ {figures/} }
+
 
 %----------------------------------------------------------------------------------------
 %	COLUMNS
@@ -246,11 +251,23 @@ Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI
 
 \begin{figure}
 	\centering
+	\includegraphics[width=\linewidth]{overall_performance}
+\end{figure}
+
+\begin{figure}
+	\centering
 	\includegraphics[width=0.9\linewidth]{figures/runtimes.pdf}
 	\vspace{14pt}
 	\caption{Comparative execution times between JAMPI, MPI, MLlib and MLlib (p64) over $n \times n$ matrices of different sizes.}
 	\label{fig:runtimes}
 \end{figure}
+
+
+section
+
+\includegraphics[width=0.9\linewidth]{compared_to_jampi}
+
+Section 
 
 
 % section results (end)
