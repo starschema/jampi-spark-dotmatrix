@@ -195,7 +195,7 @@ In order to achieve performance on par with the optimized MPI implementation for
 
 For fair benchmarking, we avoided using \texttt{Vector<>} objects or advanced methods such as manual unrolling. While these techniques could potentially further improve performance, our goals were to compare the distributed algoritms' performance with the same CPU opcodes used in local matrix multiplications. From the JIT compiler outputs, we confirmed that both Spark applications were using \texttt{vfmadd231sd}, just as in the GCC compiled MPI version.
 
-To use the new vector intrinsics' features, we built a custom OpenJDK package from the tip of the \texttt{panama/dev} branch (\texttt{dev-442a69af7bad}).
+To use the new vector intrinsics' features, we built a custom OpenJDK package from the tip of the \texttt{panama/dev} branch (\texttt{dev-442a69af7bad}). The applied JVM flags were \texttt{--add-modules jdk.incubator.vector} and \texttt{ -XX:TypeProfileLevel=121} for both JAMPI and MLlib applilcations. 
 
 % 0x00007face057eaac:   vfmadd231sd %xmm2,%xmm0,%xmm1       ;*invokestatic fma {reexecute=0 rethrow=0 return_oop=0}
 % ; - com.starschema.jampi.blas.DotProductVector$::$anonfun$saxpy$1@12 (line 254)
@@ -205,24 +205,22 @@ To use the new vector intrinsics' features, we built a custom OpenJDK package fr
 % ; - com.starschema.jampi.blas.DotProductVector$::$anonfun$fastBuffered$2@35 (line 242)
 % ; - com.starschema.jampi.blas.DotProductVector$$$Lambda$5033/0x00000008019bc568::apply$mcVI$sp@29
 
-The applied JVM flags were \texttt{--add-modules jdk.incubator.vector} and \texttt{ -XX:TypeProfileLevel=121} for both JAMPI and MLlib applilcations. 
-
 % subsection vector_panama (end)
 
 \subsection{Apache Spark MLlib}
 
-We used Apache Spark MLlib's built-in \texttt{BlockMatrix.multiply} as a baseline to compare with JAMPI's speed and resource usage. As MLlib's implementation is prone to be faster with more partitions than the total number of worker cores, we executed two tests for each scenario: one with number of partitions equal to worker cores and one where the number of partitions were equal to four times of the total worker cores. This latter scenario is referred to as \emph{over-partitioning}.
+We used Apache Spark MLlib's built-in \texttt{BlockMatrix.multiply()} as a baseline to compare with JAMPI's speed and resource usage. It is known that MLlib's implementation is often faster if the number of partitions exceeds that of worker cores (typically by a factor of 2-4 at least), a scenario known as \emph{over-partitioning}. To ensure that this is adequately reflected, we performed two test runs – a 'normal' test run, where partitions are set to equal the number of worker cores, and an 'over-partitioned' test run, where partitions equal four times the number of worker cores.
 
 \subsection{Test protocols} % (fold)
 \label{sub:test_protocols}
 
-All tests are executed Amazon Web Services EC2 instances using \texttt{m5} instance types with Intel(R) Xeon(R) Platinum 8175M CPUs and 4GB / cores RAM. Apache Spark version was 3.0.0-preview2 with separate master node. Driver process was initated from the master node and its resource consumption is not included in the results. For single code tests we disabled the second CPU core in the VM.  
+All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} instance types with Intel\textsuperscript{\textregistered} Xeon\textsuperscript{\textregistered} Platinum 8175M CPUs and 4GB RAM per core. Tests were conducted on Apache Spark 3.0.0-preview2 with a separate master node. The driver process was initated from the master node, and its resource consumption is not included in the results. For single core tests, 2-core CPUs were used, with the second CPU core having been manually disabled in the VM.
 
 
 \begin{center}
 	\begin{tabular}{ |c|c|c|c| } 
 	 \hline
-	 total worker cores & instance type & no. nodes & partitions  \\ 
+	 Total worker cores & Instance type & Nodes & Partitions  \\ 
 	 \hline\hline
 	 1 & m5.large & 1 & 1 \\ 
 	 \hline
@@ -235,9 +233,7 @@ All tests are executed Amazon Web Services EC2 instances using \texttt{m5} insta
 	\end{tabular}
 \end{center}
 	
-Applications reported only the dot product execution time with a single one value reducer (\texttt{avg}) to trigger \texttt{RDD} reduce/collection on Spark without moving substantial amount of data to the driver process. This excluded the MPI and Spark application startup times but included the time required to establish a Barrer Task Step during \texttt{RDD} reduce. We used 64bit floating point data types for matrix elements. 
-
-All test cases where executed at least ten times while execution times, CPU and memory consumptions were captured. 
+Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices comprised of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption.
 
 % subsection test_protocols (end)
 
