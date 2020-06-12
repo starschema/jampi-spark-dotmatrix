@@ -204,6 +204,10 @@ distill: $(PDFTARGETS:.pdf=.distilled.pdf)
 distclean: clean
 	$(RM) $(PDFTARGETS) $(PDFTARGETS:.pdf=.distilled.pdf) $(EXTRADISTCLEAN)
 
+plots:
+	source venv/bin/activate
+	python plot_performances.py
+
 clean:
 	$(RM) $(foreach T,$(TARGETS), \
 		$(T).bbl $(T).bcf $(T).bit $(T).blg \
