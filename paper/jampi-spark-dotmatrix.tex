@@ -275,14 +275,14 @@ For Cannon's algorithm, it is known that the communication complexity $D$ can be
 	\Omega(n) = O(\sqrt{p} n^2)
 \end{equation}
 
-More generally, it holds that the running time $T(n, p)$ for problem size $n$ and $p$ processors scales by a constant factor $c$, so that
+\noindent More generally, it holds that the running time $T(n, p)$ for problem size $n$ and $p$ processors scales by a constant factor $c$, so that
 
 \begin{equation}
 	T(n, 1) \geq c \ To(n, p)
 	\label{eq:general_runtime}
 \end{equation}
 
-From Equation~\eqref{eq:general_runtime}, it follows that
+\noindent From Equation~\eqref{eq:general_runtime}, it follows that
 
 \begin{equation}
 	n^3 \geq c \ \sqrt{p} \ n^2 \\
@@ -290,7 +290,7 @@ From Equation~\eqref{eq:general_runtime}, it follows that
 	\label{eq:scale_factor}
 \end{equation}
 
-It follows thus from Equation~\eqref{eq:scale_factor} and $M(n) = n^2$ that
+\noindent It follows thus from Equation~\eqref{eq:scale_factor} and $M(n) = n^2$ that
 
 \begin{equation}
 	\frac{M(c \ \sqrt{p})}{p} = \frac{c^2 \ p}{p} = c^2
