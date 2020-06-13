@@ -218,12 +218,17 @@ To use the new vector intrinsics' features, we built a custom OpenJDK package fr
 
 We used Apache Spark MLlib's built-in \texttt{BlockMatrix.multiply()} as a baseline to compare with JAMPI's speed and resource usage. It is known that MLlib's implementation is often faster if the number of partitions exceeds that of worker cores (typically by a factor of 2-4 at least), a scenario known as \emph{over-partitioning}. To ensure that this is adequately reflected, we performed two test runs – a 'normal' test run, where partitions are set to equal the number of worker cores, and an 'over-partitioned' test run, where partitions equal four times the number of worker cores.
 
+\begin{figure*}
+	\centering
+	\includegraphics[width=0.9\linewidth]{overall_performance}
+	\vspace{14pt}
+	\caption{Comparative performance of JAMPI, native MPI and MLlib on random matrices of various dimensions, on 1, 16, 64 and 256 cores.}
+	\label{fig:overall_performance}
+\end{figure*}
 \subsection{Test protocols} % (fold)
 \label{sub:test_protocols}
 
 All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} instance types with Intel\textsuperscript{\textregistered} Xeon\textsuperscript{\textregistered} Platinum 8175M CPUs and 4GB RAM per core. Tests were conducted on Apache Spark 3.0.0-preview2 with a separate master node. The driver process was initiated from the master node, and its resource consumption is not included in the results. For single core tests, 2-core CPUs were used, with the second CPU core having been manually disabled in the VM.
-
-
 
 \begin{center}
 	\begin{tabular}{ |c|c|c|c| } 
@@ -241,6 +246,7 @@ All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} 
 	\end{tabular}
 \end{center}
 	
+
 Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices comprised of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption.
 
 % subsection test_protocols (end)
@@ -310,14 +316,6 @@ It is evident from Figure~\ref{fig:memory_usage} that MLLib's memory requirement
 \label{sec:results}
 
 Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior to MLlib, even when overpartitioned (see Figure~\ref{fig:comparison_to_jampi}, overpartitioning is denoted by \texttt{op}). When normalised to JAMPI's execution times over 16 and 64 cores, execution time is slower for smaller matrices (under 4096 $\times$ 4096 elements) due to the need to establish and run the barrier execution task. However, beyond a trivial problem size, JAMPI and the MPI implementation rapidly become significantly more efficient, regardless of the number of cores. Notably, plain MLlib (i.e. without overpartitioning) was unable to accommodate a problem size beyond 10240 $\times$ 10240 (for 16 cores) or 20480 $\times$ 20480 (for 64 cores).
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.9\linewidth]{overall_performance}
-	\vspace{14pt}
-	\caption{Comparative performance of JAMPI, native MPI and MLlib on random matrices of various dimensions, on 1, 16, 64 and 256 cores.}
-	\label{fig:overall_performance}
-\end{figure}
 
 % \begin{figure}
 % 	\centering
