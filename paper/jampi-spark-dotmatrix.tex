@@ -120,7 +120,9 @@ Matrix multiplication plays a significant role in a range of practical applicati
 
 The matrix multiplication operation $\star$ for an $p \times q$ matrix $\mathbf{A}$ and an $q \times r$ matrix $B$ is defined so that for the resultant matrix $\mathbf{C} = \mathbf{A} \star \mathbf{B}$, each element $c_{i, j}$ is the dot product of the $i$-th row of $\mathbf{A}$ and the $j$-th row of $\mathbf{B}$, i.e.
 
-$$ c_{i, j} = \sum_{k = 1}^n a_{i, k} b_{k, j} $$
+\begin{equation}
+	c_{i, j} = \sum_{k = 1}^n a_{i, k} b_{k, j}
+\end{equation}
 
 The multiplication of square matrices constitutes a special case. For a square matrix of order $n$, i.e. an $n \times n$ matrix, a special case obtains, which can be resolved efficiently using Cannon's algorithm.\cite{cannon1969cellular} 
 
@@ -241,17 +243,54 @@ All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} 
 	
 Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices comprised of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption.
 
+% subsection test_protocols (end)
 
-\section{Scalability Analysis} % (fold)
+\subsection{Scalability analysis} % (fold)
 \label{sub:scalability_analysis}
 
-One important aspect of any distributed algorithm is its ability to scale up as the problem size increases since we need to make sure that the algorithm not only is fast enough to solve the problem in question, but also that is able to solve bigger instances of the problem every time. 
 
-There are intrinsic issues when scaling algorithms, for instance, it is known that the memory requirements for each processor increases as we add processors to the computation. Then, as we scale up, we need to measure how the memory requirements per processor is affected.
+An important aspect of any distributed algorithm is its ability to scale up as the problem size increases. This is crucial for proving the value of an algorithmic solution, since it demonstrates its ability to solve increasingly complex instances of the same fundamental problem effectively. There are intrinsic issues when scaling distributed multi-processor algorithms. It is known, for instance, that the memory requirement for each processor increases as we add processors to a computation. Therefore, we must analyse the effect of problem size on the memory requiremens per processor. 
 
-SHOW ANALYSIS HERE???
+For Cannon's algorithm, it is known that the communication complexity $D$ can be calculated as 
 
-Analyzing Cannon's Algorithm yields that the memory requirements per processor increases linearly, which makes Cannon's Algorithm very scalable. Our MPI and JAMPI are direct implementations of Cannon's Algorithm, thus we can say that they both have the same scalability factor. 
+\begin{equation}
+	D = O(\frac{n^2}{\sqrt{p}})
+\end{equation}
+
+\noindent and therefore, for the average case complexity (and thus upper and lower bound of running time) of the algorithm, $\Theta$, it holds that
+
+\begin{equation}
+	\Theta(n) = O(n^3)
+\end{equation}
+
+\noindent while the best-case running time $\Omega$ is
+
+\begin{equation}
+	\Omega(n) = O(\sqrt{p} n^2)
+\end{equation}
+
+More generally, it holds that the running time $T(n, p)$ for problem size $n$ and $p$ processors scales by a constant factor $c$, so that
+
+\begin{equation}
+	T(n, 1) \geq c \ To(n, p)
+	\label{eq:general_runtime}
+\end{equation}
+
+From Equation~\eqref{eq:general_runtime}, it follows that
+
+\begin{equation}
+	n^3 \geq c \ \sqrt{p} \ n^2 \\
+	n \geq c \ \sqrt{p}
+	\label{eq:scale_factor}
+\end{equation}
+
+It follows thus from Equation~\eqref{eq:scale_factor} and $M(n) = n^2$ that
+
+\begin{equation}
+	\frac{M(c \ \sqrt{p})}{p} = \frac{c^2 \ p}{p} = c^2
+\end{equation}
+
+An analysis of Cannon's algorithm yields that the memory requirements per processor increase linearly, making this algorithm extremely scalable. Figure~\ref{fig:memory_usage} illustrates this scaling behaviour comparatively between JAMPI, a pure MPI implementation and MLlib. JAMPI, as well as the MPI algorithm test case, are direct implementations of Cannon's algorithm, thus having the same scalability factor. 
 
 When we run our tests, we can see how memory increases as we add processors. 
 
@@ -259,45 +298,45 @@ When we run our tests, we can see how memory increases as we add processors.
 	\centering
 	\includegraphics[width=0.9\linewidth]{figures/memory.png}
 	\vspace{14pt}
-	\caption{Comparative memory usage between JAMPI, MPI, MLlib}
+	\caption{Comparative memory usage between JAMPI, MPI and MLlib}
+	\label{fig:memory_usage}
 \end{figure}
 
-However, as we can see, MLLib memory increases quite fast, which indicates that its scalability factor is bigger than the one presented by Cannon's Algorithm. This is one of the limitation of MLLib and Spark compared to MPI and its direct implementation for Spark JAMPI. 
+It is evident from Figure~\ref{fig:memory_usage} that MLLib's memory requirement increases quite fast, suggesting that its scalability factor is larger than that of Cannon's algorithm (i.e. it is less scalable). This is a key limitation of MLlib and Spark when compared to MPI and JAMPI alike, which scale better. Indeed, in some test scenarios, we have been unable to scale MLlib beyond a certain problem size, indicating that in addition to its poor performance compared to MPI and JAMPI, it is also limited in the maximum problem size it can accommodate with a set level of resources. Neither JAMPI nor the native MPI implementation is so limited.
 
-In some of our tests, we cannot continue to scale MLlib while in MPI and JAMPI, we can simple increase the problem size along with the number of processors. These results are indications of scalability issues within MLlib in addition with its poor performance compared to MPI and JAMPI.
-
-% subsection test_protocols (end)
-
-% section methods (end)
-
-
-
-
+% subsection scalability_analysis (end)
 
 \section{Results} % (fold)
 \label{sec:results}
 
-Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior (Figure~\ref{fig:runtimes})
+Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior to MLlib, even when overpartitioned (see Figure~\ref{fig:comparison_to_jampi}, overpartitioning is denoted by \texttt{op}). When normalised to JAMPI's execution times over 16 and 64 cores, execution time is slower for smaller matrices (under 4096 $\times$ 4096 elements) due to the need to establish and run the barrier execution task. However, beyond a trivial problem size, JAMPI and the MPI implementation rapidly become significantly more efficient, regardless of the number of cores. Notably, plain MLlib (i.e. without overpartitioning) was unable to accommodate a problem size beyond 10240 $\times$ 10240 (for 16 cores) or 20480 $\times$ 20480 (for 64 cores).
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\linewidth]{overall_performance}
-\end{figure}
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.9\linewidth]{figures/runtimes.pdf}
+	\includegraphics[width=0.9\linewidth]{overall_performance}
 	\vspace{14pt}
-	\caption{Comparative execution times between JAMPI, MPI, MLlib and MLlib (p64) over $n \times n$ matrices of different sizes.}
-	\label{fig:runtimes}
+	\caption{Comparative performance of JAMPI, native MPI and MLlib on random matrices of various dimensions, on 1, 16, 64 and 256 cores.}
+	\label{fig:overall_performance}
+\end{figure}
+
+% \begin{figure}
+% 	\centering
+% 	\includegraphics[width=0.9\linewidth]{figures/runtimes.pdf}
+% 	\vspace{14pt}
+% 	\caption{Comparative execution times between JAMPI, MPI, MLlib and MLlib (p64) over $n \times n$ matrices of different sizes.}
+% 	\label{fig:runtimes}
+% \end{figure}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{compared_to_jampi}
+	\vspace{14pt}
+	\caption{Comparative execution times on 16 and 64 cores for various matrix sizes, normalised to JAMPI (blue).}
+	\label{fig:comparison_to_jampi}
 \end{figure}
 
 
-section
-
-\includegraphics[width=0.9\linewidth]{compared_to_jampi}
-
-Section 
 
 
 % section results (end)
