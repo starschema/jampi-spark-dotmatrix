@@ -64,7 +64,7 @@
 
 \Authors{Tamas Foldi\textsuperscript{1}*, Chris von Csefalvay\textsuperscript{1}, Nicolas A Perez\textsuperscript{2}} % Authors
 \affiliation{\textsuperscript{1}\textit{Starschema Inc., Arlington, VA.}} % Author affiliation
-\affiliation{\textsuperscript{1}\textit{Hewlett Packard Enterprise Co.,  Miami, FL.}} % Author affiliation
+\affiliation{\textsuperscript{2}\textit{Hewlett Packard Enterprise Co.,  Miami, FL.}} % Author affiliation
 \affiliation{*\textbf{Corresponding author}: tfoldi@starschema.net} % Corresponding author
 
 % \Keywords{Spark --- Matrix multiplication --- Algorithmic methods} % Keywords - if you don't want any simply remove all the text between the curly brackets
@@ -74,7 +74,7 @@
 %	ABSTRACT
 %----------------------------------------------------------------------------------------
 
-\Abstract{The new barrier mode in Apache Spark allows embedding distributed deep learning training as a Spark stage to simplify the distributed training workflow. In Spark, a task in a stage doesn’t depend on any other tasks in the same stage, and hence it can be scheduled independently. However, several algorithms require more sophisticated inter-task communications, similar to the MPI paradigm. By combining distributed message passing (using asynchronous network IO), OpenJDK's new auto-vectorization and Spark's barrier mode, we can add non-map/reduce based algorithms, such as Cannon's distributed matrix multiplication, improving the performance of the existing MLlib implementation. This paper discloses an efficient distributed matrix multiplication algorithm within a barrier task, which results in an XXX\% performance increase on a 10,000x10,000 square matrix with XXX\% less memory footprint. Applications of efficient matrix multiplication include significantly accelerating the training and implementation of deep convolutional neural network based workloads.}
+\Abstract{The new barrier mode in Apache Spark allows embedding distributed deep learning training as a Spark stage to simplify the distributed training workflow. In Spark, a task in a stage doesn’t depend on any other tasks in the same stage, and hence it can be scheduled independently. However, several algorithms require more sophisticated inter-task communications, similar to the MPI paradigm. By combining distributed message passing (using asynchronous network IO), OpenJDK's new auto-vectorization and Spark's barrier execution mode, we can add non-map/reduce based algorithms, such as Cannon's distributed matrix multiplication to Spark. We document an efficient distributed matrix multiplication using Cannon's algorithm, which improves significantly on the performance of the existing MLlib implementation. Used within a barrier task, the algorithm described herein results in an up to 24\% performance increase on a 10,000x10,000 square matrix with a significantly lower memory footprint. Applications of efficient matrix multiplication include, among others, accelerating the training and implementation of deep convolutional neural network based workloads, and thus such efficient algorithms can play a ground-breaking role in faster, more efficient execution of even the most complicated machine learning tasks.}
 
 %----------------------------------------------------------------------------------------
 
@@ -298,8 +298,6 @@ For Cannon's algorithm, it is known that the communication complexity $D$ can be
 
 An analysis of Cannon's algorithm yields that the memory requirements per processor increase linearly, making this algorithm extremely scalable. Figure~\ref{fig:memory_usage} illustrates this scaling behaviour comparatively between JAMPI, a pure MPI implementation and MLlib. JAMPI, as well as the MPI algorithm test case, are direct implementations of Cannon's algorithm, thus having the same scalability factor. 
 
-When we run our tests, we can see how memory increases as we add processors. 
-
 \begin{figure}
 	\centering
 	\includegraphics[width=0.9\linewidth]{figures/memory.png}
@@ -317,13 +315,38 @@ It is evident from Figure~\ref{fig:memory_usage} that MLLib's memory requirement
 
 Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior to MLlib, even when overpartitioned (see Figure~\ref{fig:comparison_to_jampi}, overpartitioning is denoted by \texttt{op}). When normalised to JAMPI's execution times over 16 and 64 cores, execution time is slower for smaller matrices (under 4096 $\times$ 4096 elements) due to the need to establish and run the barrier execution task. However, beyond a trivial problem size, JAMPI and the MPI implementation rapidly become significantly more efficient, regardless of the number of cores. Notably, plain MLlib (i.e. without overpartitioning) was unable to accommodate a problem size beyond 10240 $\times$ 10240 (for 16 cores) or 20480 $\times$ 20480 (for 64 cores).
 
-% \begin{figure}
-% 	\centering
-% 	\includegraphics[width=0.9\linewidth]{figures/runtimes.pdf}
-% 	\vspace{14pt}
-% 	\caption{Comparative execution times between JAMPI, MPI, MLlib and MLlib (p64) over $n \times n$ matrices of different sizes.}
-% 	\label{fig:runtimes}
-% \end{figure}
+\subsection{Memory usage} % (fold)
+\label{sub:memory_usage}
+
+Memory usage has been a documented limiting factor, with pure MLlib reaching execution limits at relatively trivial matrix dimensions per processor (Table~\ref{tab:out_of_memory}). While over-partitioning slightly increases the maximum matrix size, MLlib suffers from not only lower performance but also a memory consumption upper bound that limits its ability to scale to larger problems.
+
+Our research indicates that for a 10,240 $\times$ 10,240 element standard matrix, JAMPI and MPI perform approximately equally (4,889 MB vs 5,108 MB, respectively, for 256 cores), while both over-partitioned and regular MLlib execution creates a marginally larger memory footprint (6,049 MB and 6,423 MB, respectively, for 256 cores).  However, with increasing problem size, differences become vastly apparent: for a 30,720 $\times$ 30,720 element matrix, MPI and JAMPI continue to require a constant memory footprint (5,572 MB and 6,084 MB, respectively), while the same problem size requires 24,525 MB with over-partitioning and 29,445 MB without. In other words, JAMPI and MPI memory burden is constant regardless of problem size, while at the non-trivial 30,720 $\times$ 30,720 matrix size, MLlib requires a 4.03 (with over-partitioning) to 4.84 (without over-partitioning) times larger memory allocation.
+
+Comparative analysis of memory usage (see Figure~\ref{fig:memory_usage}) shows that JAMPI is generally on par (within 30\%) of the pure MPI implementation, while MLlib typically requires approximately four times the amount of memory allocation that the MPI based approaches demand, with regular MLlib requiring typically 15\% to 50\% more memory than over-partitioned implementations.
+
+\begin{table}
+	\centering
+	\begin{tabular}{ |c|c|c| } 
+	 \hline
+	 Cores & MLlib & MLlib (op)  \\ 
+	 \hline\hline
+	 1 & 4096 & 10240 \\ 
+	 \hline
+	 16 & 10240 & 15360 \\ 
+	 \hline
+	 64 & 20480 & 25600 \\ 
+	 \hline
+	 256 & 30720 & 51200 \\ 
+	 \hline
+	\end{tabular}
+	\caption{Out-of-memory boundary sizes for MLlib, in normal (MLlib) and overpartitioned (MLlib (op)) mode.}
+	\label{tab:out_of_memory}
+\end{table}
+	
+% subsection memory_usage (end)
+
+\subsection{Performance} % (fold)
+\label{sub:performance}
 
 
 \begin{figure}
@@ -335,12 +358,28 @@ Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI
 \end{figure}
 
 
+% \begin{figure}
+% 	\centering
+% 	\includegraphics[width=0.9\linewidth]{figures/runtimes.pdf}
+% 	\vspace{14pt}
+% 	\caption{Comparative execution times between JAMPI, MPI, MLlib and MLlib (p64) over $n \times n$ matrices of different sizes.}
+% 	\label{fig:runtimes}
+% \end{figure}
+
+Comparing performance in terms of execution time shows a similar picture in all multi-core environments. MLlib, both with and without over-partitioning, are superior to JAMPI in trivial-sized matrices (4096 $\times$ 4096 for 16- and 64-core environments, 10240 $\times$ 10240 for 256-core environments), but rapidly exceed it, with an average of 29.52\% (with over-partitioning) to 54.54\% (without over-partitioning) slower execution at the largest feasible matrix for the given number of cores. For large matrices, as Figure~\ref{fig:comparison_to_jampi} shows, a pure MPI implementation is typically 3.38\% to 19.59\% faster than JAMPI. 
+
+The comparative analysis of performance indicators shows that while a pure MPI implementation is somewhat faster than JAMPI, this difference is significationly smaller than the difference between the MLlib implementation and JAMPI, proving that JAMPI is an efficient and fast alternative to pure MPI applications without a significant performance overhead.
+
+% subsection performance (end)
+
 
 
 % section results (end)
 
 \section{Conclusion} % (fold)
 \label{sec:conclusion}
+
+Cannon's algorithm can be implemented quite conveniently using a barrier task within Spark, providing a native interpretation of this highly efficient distributed linear algebra primitive. By using barrier tasks to reimplement matrix primitives with Panama's built-in efficient vectorization and asynchronous communication (as provided by \texttt{nio} in this case), very significant performance gains can be effected on frequently used tasks. The proposed implementation of Cannon's algorithm, for instance, has yielded an almost 25\% decrease in execution time, and has been superior to the MLlib implementation on all core sizes above trivial matrix sizes. While this algorithm is limited to square matrices, the general effectiveness gains are indicative of a strong theoretical and practical benefit of further research in ways efficient matrix primitives can be integrated with big data solutions like Apache Spark. Further research in this field is required to create a coherent stack of matrix primitives in order to allow modern deep learning applications, relying greatly on such building blocks, to leverage the performance benefits of big data solutions in storing and managing data as a layer of an integrated framework of large-scale machine learning.
 
 % section conclusion (end)
 
