@@ -202,7 +202,7 @@ In order to achieve performance on par with the optimized MPI implementation for
 
 For fair benchmarking, we avoided using \texttt{Vector<>} objects or advanced methods such as manual unrolling. While these techniques could potentially further improve performance, our goals were to compare the distributed algorithms' performance with the same CPU opcodes used in local matrix multiplications. From the JIT compiler outputs, we confirmed that both Spark applications were using \texttt{vfmadd231sd}, just as in the GCC compiled MPI version.
 
-To use the new vector intrinsics' features, we built a custom OpenJDK package from the tip of the \texttt{panama/dev} branch (\texttt{dev-442a69af7bad}). The applied JVM flags were \texttt{--add-modules jdk.incubator.vector} and \texttt{ -XX:TypeProfileLevel=121} for both JAMPI and MLlib applilcations. 
+To use the new vector intrinsics' features, we built a custom OpenJDK package from the tip of the \texttt{panama/dev} branch (\texttt{dev-442a69af7bad}). The applied JVM flags were \texttt{--add-modules jdk.incubator.vector} and \texttt{ -XX:TypeProfileLevel=121} for both JAMPI and MLlib applications. 
 
 % 0x00007face057eaac:   vfmadd231sd %xmm2,%xmm0,%xmm1       ;*invokestatic fma {reexecute=0 rethrow=0 return_oop=0}
 % ; - com.starschema.jampi.blas.DotProductVector$::$anonfun$saxpy$1@12 (line 254)
@@ -247,7 +247,7 @@ All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} 
 \end{center}
 	
 
-Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices comprised of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption.
+Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices composed of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption.
 
 % subsection test_protocols (end)
 
@@ -255,9 +255,9 @@ Applications reported only the dot product execution time. A single one-value re
 \label{sub:scalability_analysis}
 
 
-An important aspect of any distributed algorithm is its ability to scale up as the problem size increases. This is crucial for proving the value of an algorithmic solution, since it demonstrates its ability to solve increasingly complex instances of the same fundamental problem effectively. There are intrinsic issues when scaling distributed multi-processor algorithms. It is known, for instance, that the memory requirement for each processor increases as we add processors to a computation. Therefore, we must analyse the effect of problem size on the memory requiremens per processor. 
+An important aspect of any distributed algorithm is its ability to scale up as the problem size increases. This is crucial for proving the value of an algorithmic solution, since it demonstrates its ability to solve increasingly complex instances of the same fundamental problem effectively. There are intrinsic issues when scaling distributed multi-processor algorithms. It is known, for instance, that the memory requirement for each processor increases as we add processors to a computation. Therefore, we must analyze the effect of problem size on the memory requirements per processor. 
 
-For Cannon's algorithm multiplying two square matrices of size $n \times n$, the problem size $W$ is on the order of $n^2$, i.e.
+For Cannon's algorithm multiplying two square matrices of size $n \times n$, the problem size $W$ is on the order of $n^2$, i.e.,
 
 \begin{equation}
 	W = \mathcal{O}(n^2)
@@ -303,7 +303,7 @@ It is known that the communication cost $D$, which is how much data is being shi
 
 More generally, it holds that for a problem size $W$ and $p$ processors, Cannon's Algorithm memory requirements increase by a constant factor $c^2$ that is independent of the number of processors $p$ involved in the computation.  Since the memory requirements per processor increase linearly, without direct relationship to $p$, it can be said that Cannon's algorithm is extremely scalable. 
 
-Figure~\ref{fig:memory_usage} illustrates this scaling behavior comparatively between JAMPI, a pure MPI implementation and MLlib. JAMPI, as well as the MPI algorithm test case, are direct implementations of Cannon's algorithm, thus having the same scalability behavior. 
+Figure~\ref{fig:memory_usage} illustrates this scaling behavior comparatively between JAMPI, a pure MPI implementation and MLlib. JAMPI, as well as the MPI algorithm test case, are both direct implementations of Cannon's algorithm, thus having the same scalability behavior. 
 
 \begin{figure}
 	\centering
@@ -320,7 +320,7 @@ It is evident from Figure~\ref{fig:memory_usage} that MLLib's memory requirement
 \section{Results} % (fold)
 \label{sec:results}
 
-Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior to MLlib, even when overpartitioned (see Figure~\ref{fig:comparison_to_jampi}, overpartitioning is denoted by \texttt{op}). When normalised to JAMPI's execution times over 16 and 64 cores, execution time is slower for smaller matrices (under 4096 $\times$ 4096 elements) due to the need to establish and run the barrier execution task. However, beyond a trivial problem size, JAMPI and the MPI implementation rapidly become significantly more efficient, regardless of the number of cores. Notably, plain MLlib (i.e. without overpartitioning) was unable to accommodate a problem size beyond 10240 $\times$ 10240 (for 16 cores) or 20480 $\times$ 20480 (for 64 cores).
+Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior to MLlib, even when over-partitioned (see Figure~\ref{fig:comparison_to_jampi}, over-partitioning is denoted by \texttt{op}). When normalized against JAMPI's execution times over 16 and 64 cores, execution time is slower for smaller matrices (under 4096 $\times$ 4096 elements) due to the need to establish and run the barrier execution task. However, beyond a trivial problem size, JAMPI and the MPI implementation rapidly become significantly more efficient, regardless of the number of cores. Notably, plain MLlib (i.e. without over-partitioning) was unable to accommodate a problem size beyond 10240 $\times$ 10240 (for 16 cores) or 20480 $\times$ 20480 (for 64 cores).
 
 \subsection{Memory usage} % (fold)
 \label{sub:memory_usage}
@@ -346,7 +346,7 @@ Comparative analysis of memory usage (see Figure~\ref{fig:memory_usage}) shows t
 	 256 & 30720 & 51200 \\ 
 	 \hline
 	\end{tabular}
-	\caption{Out-of-memory boundary sizes for MLlib, in normal (MLlib) and overpartitioned (MLlib (op)) mode.}
+	\caption{Out-of-memory boundary sizes for MLlib, in normal (MLlib) and over-partitioned (MLlib (op)) mode.}
 	\label{tab:out_of_memory}
 \end{table}
 	
@@ -360,7 +360,7 @@ Comparative analysis of memory usage (see Figure~\ref{fig:memory_usage}) shows t
 	\centering
 	\includegraphics[width=0.9\linewidth]{compared_to_jampi}
 	\vspace{14pt}
-	\caption{Comparative execution times on 16 and 64 cores for various matrix sizes, normalised to JAMPI (blue).}
+	\caption{Comparative execution times on 16 and 64 cores for various matrix sizes, normalized to JAMPI (blue).}
 	\label{fig:comparison_to_jampi}
 \end{figure}
 
@@ -377,7 +377,7 @@ Comparing performance in terms of execution time shows a similar picture in all 
 
 However, MLlib execution times rapidly increases, yielding an average of 29.52\% (with over-partitioning) to 54.54\% (without over-partitioning) slower execution time at the largest feasible matrix for the given number of cores. On the other hand, for large matrices, as Figure~\ref{fig:comparison_to_jampi} shows, a pure MPI implementation is typically 3.38\% to 19.59\% faster than JAMPI. 
 
-The comparative analysis of performance indicators shows that while a pure MPI implementation is somewhat faster than JAMPI, this difference is significationly smaller than the difference between the MLlib implementation and JAMPI, proving that JAMPI is an efficient and fast alternative to pure MPI applications without a significant performance overhead.
+The comparative analysis of performance indicators shows that while a pure MPI implementation is somewhat faster than JAMPI, this difference is significantly smaller than the difference between the MLlib implementation and JAMPI, proving that JAMPI is an efficient and fast alternative to pure MPI applications without a significant performance overhead.
 
 % subsection performance (end)
 
