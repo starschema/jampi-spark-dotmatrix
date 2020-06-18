@@ -325,7 +325,7 @@ Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI
 \subsection{Memory usage} % (fold)
 \label{sub:memory_usage}
 
-Memory usage has been a documented limiting factor, with pure MLlib reaching execution limits at relatively trivial matrix dimensions per processor (Table~\ref{tab:out_of_memory}). While over-partitioning slightly increases the maximum matrix size, MLlib suffers from not only lower performance but also a memory consumption upper bound that limits its ability to scale to larger problems.
+Memory usage has been a documented limiting factor, with pure MLlib reaching execution limits at relatively trivial matrix dimensions per processor (Table~\ref{tab:out_of_memory}). While over-partitioning slightly increases the maximum matrix size, MLlib suffers from not only lower performance but also a memory consumption upper bound that limits its ability to scale to larger problem sizes.
 
 Our research indicates that for a 10,240 $\times$ 10,240 element standard matrix, JAMPI and MPI perform approximately equally (4,889 MB vs 5,108 MB, respectively, for 256 cores), while both over-partitioned and regular MLlib execution creates a marginally larger memory footprint (6,049 MB and 6,423 MB, respectively, for 256 cores).  However, with increasing problem size, differences become vastly apparent: for a 30,720 $\times$ 30,720 element matrix, MPI and JAMPI continue to require a constant memory footprint (5,572 MB and 6,084 MB, respectively), while the same problem size requires 24,525 MB with over-partitioning and 29,445 MB without. In other words, JAMPI and MPI memory burden is constant regardless of problem size, while at the non-trivial 30,720 $\times$ 30,720 matrix size, MLlib requires a 4.03 (with over-partitioning) to 4.84 (without over-partitioning) times larger memory allocation.
 
@@ -373,7 +373,9 @@ Comparative analysis of memory usage (see Figure~\ref{fig:memory_usage}) shows t
 % 	\label{fig:runtimes}
 % \end{figure}
 
-Comparing performance in terms of execution time shows a similar picture in all multi-core environments. MLlib, both with and without over-partitioning, are superior to JAMPI in trivial-sized matrices (4096 $\times$ 4096 for 16- and 64-core environments, 10240 $\times$ 10240 for 256-core environments), but rapidly exceed it, with an average of 29.52\% (with over-partitioning) to 54.54\% (without over-partitioning) slower execution at the largest feasible matrix for the given number of cores. For large matrices, as Figure~\ref{fig:comparison_to_jampi} shows, a pure MPI implementation is typically 3.38\% to 19.59\% faster than JAMPI. 
+Comparing performance in terms of execution time shows a similar picture in all multi-core environments. MLlib, both with and without over-partitioning, presents a lower execution time compared to JAMPI in trivial-sized matrices (4096 $\times$ 4096 for 16- and 64-core environments, 10240 $\times$ 10240 for 256-core environments). 
+
+However, MLlib execution times rapidly increases, yielding an average of 29.52\% (with over-partitioning) to 54.54\% (without over-partitioning) slower execution time at the largest feasible matrix for the given number of cores. On the other hand, for large matrices, as Figure~\ref{fig:comparison_to_jampi} shows, a pure MPI implementation is typically 3.38\% to 19.59\% faster than JAMPI. 
 
 The comparative analysis of performance indicators shows that while a pure MPI implementation is somewhat faster than JAMPI, this difference is significationly smaller than the difference between the MLlib implementation and JAMPI, proving that JAMPI is an efficient and fast alternative to pure MPI applications without a significant performance overhead.
 
