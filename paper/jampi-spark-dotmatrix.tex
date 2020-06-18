@@ -257,31 +257,38 @@ Applications reported only the dot product execution time. A single one-value re
 
 An important aspect of any distributed algorithm is its ability to scale up as the problem size increases. This is crucial for proving the value of an algorithmic solution, since it demonstrates its ability to solve increasingly complex instances of the same fundamental problem effectively. There are intrinsic issues when scaling distributed multi-processor algorithms. It is known, for instance, that the memory requirement for each processor increases as we add processors to a computation. Therefore, we must analyse the effect of problem size on the memory requiremens per processor. 
 
-For Cannon's algorithm multiplying two square matrices of size $n \times n$, the problem size $W$ is on the order of $n^3$, i.e.
+For Cannon's algorithm multiplying two square matrices of size $n \times n$, the problem size $W$ is on the order of $n^2$, i.e.
 
 \begin{equation}
-	W = \mathcal{O}(n^3)
+	W = \mathcal{O}(n^2)
 	\label{eq:problem_size}
+\end{equation}
+
+The sequential time, that is when $p$ = 1, is 
+
+\begin{equation}
+	T_1(n) = \mathcal{O}(n^3)
+	\label{eq:seq_runtime}
 \end{equation}
 
 For $p$ processors, the execution time for a matrix of size $n \times n$ is given as $T_p (n)$. It follows that parallelization of the problem yields a speed-up calculated as $\frac{W}{T_p (n)}$. 
 
-In addition, parallel execution of an $n \times n$ problem over $p$ nodes will incur a performance overhead of $T_o(n, p)$, including all communication costs. 
+In addition, parallel execution of an $n \times n$ problem size over $p$ processors will incur a performance overhead of $T_o(n, p)$, including all communication costs. 
 
-it is known that the communication complexity $D$ can be calculated as 
+It is known that the communication cost $D$, which is how much data is being shifted across the $p$ processors, can be calculated as 
 
 \begin{equation}
 	D = O(\frac{n^2}{\sqrt{p}})
 \end{equation}
 
-\noindent More generally, it holds that the running time $T_p (n)$ for problem size $n$ and $p$ processors scales by a constant factor $c$, so that
+\noindent More generally, it holds that the running time $T_p (n)$ for problem size $W$ and $p$ processors scales by a constant factor $c$, so that
 
 \begin{equation}
 	T_1(n) \geq c \ T_o(n, p)
-	\label{eq:general_runtime}
+	\label{eq:iso_efficiency}
 \end{equation}
 
-\noindent From Equation~\eqref{eq:general_runtime}, it follows that
+\noindent Substituting Equation~\eqref{eq:seq_runtime} in Equation~\eqref{eq:iso_efficiency} , it follows that
 
 \begin{equation}
 	n^3 \geq c \ \sqrt{p} \ n^2 \ \implies \ n \geq c \ \sqrt{p}
