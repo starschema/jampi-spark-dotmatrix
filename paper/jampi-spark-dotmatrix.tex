@@ -281,14 +281,14 @@ It is known that the communication cost $D$, which is how much data is being shi
 	D = O(\frac{n^2}{\sqrt{p}})
 \end{equation}
 
-\noindent More generally, it holds that the running time $T_p (n)$ for problem size $W$ and $p$ processors scales by a constant factor $c$, so that
+\noindent Using the following iso-efficiency relationship of parallel systems,  
 
 \begin{equation}
 	T_1(n) \geq c \ T_o(n, p)
 	\label{eq:iso_efficiency}
 \end{equation}
 
-\noindent Substituting Equation~\eqref{eq:seq_runtime} in Equation~\eqref{eq:iso_efficiency} , it follows that
+\noindent Substituting Equation~\eqref{eq:seq_runtime} in Equation~\eqref{eq:iso_efficiency}, it follows that
 
 \begin{equation}
 	n^3 \geq c \ \sqrt{p} \ n^2 \ \implies \ n \geq c \ \sqrt{p}
@@ -301,7 +301,9 @@ It is known that the communication cost $D$, which is how much data is being shi
 	\frac{M(c \ \sqrt{p})}{p} = \frac{c^2 \ p}{p} = c^2
 \end{equation}
 
-An analysis of Cannon's algorithm yields that the memory requirements per processor increase linearly, making this algorithm extremely scalable. Figure~\ref{fig:memory_usage} illustrates this scaling behaviour comparatively between JAMPI, a pure MPI implementation and MLlib. JAMPI, as well as the MPI algorithm test case, are direct implementations of Cannon's algorithm, thus having the same scalability factor. 
+More generally, it holds that for a problem size $W$ and $p$ processors, Cannon's Algorithm memory requirements increase by a constant factor $c^2$ that is independent of the number of processors $p$ involved in the computation.  Since the memory requirements per processor increase linearly, without direct relationship to $p$, it can be said that Cannon's algorithm is extremely scalable. 
+
+Figure~\ref{fig:memory_usage} illustrates this scaling behavior comparatively between JAMPI, a pure MPI implementation and MLlib. JAMPI, as well as the MPI algorithm test case, are direct implementations of Cannon's algorithm, thus having the same scalability factor. 
 
 \begin{figure}
 	\centering
