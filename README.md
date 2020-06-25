@@ -1,6 +1,8 @@
 # JAMPI: Java Assisted Matrix Product with Inter-task communication
 
-Matrix Multiplication in Spark using Barrier Mode
+[![DOI](https://zenodo.org/badge/265725621.svg)](https://zenodo.org/badge/latestdoi/265725621)
+
+Source repository for Foldi, von Csefalvay and Perez (2020), _JAMPI: efficient matrix multiplication in Spark using Barrier Execution Mode_.
 
 ## Building the paper
 
