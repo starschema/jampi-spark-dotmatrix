@@ -7,7 +7,10 @@
 
 \usepackage[english]{babel} % Specify a different language here - english by default
 
-\usepackage[super,biblabel]{cite} % Superscript citations
+\usepackage[super,square,sort&compress,numbers]{natbib}
+\bibliographystyle{unsrtnat}
+\usepackage{url}
+\urlstyle{same}
 
 \usepackage{setspace} % for block quoting
 
@@ -16,6 +19,10 @@
 \usepackage{graphicx}
 
 \usepackage{listings}
+
+\usepackage{url}
+
+\usepackage{hyperref}
 
 \usepackage[htt]{hyphenat}
 
@@ -30,7 +37,6 @@
 \AtEndEnvironment{quote}{\vspace{-\topsep}\endsinglespace}
 
 \graphicspath{ {figures/} }
-
 
 %----------------------------------------------------------------------------------------
 %	COLUMNS
@@ -247,7 +253,7 @@ All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} 
 \end{center}
 	
 
-Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices composed of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption.
+Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices composed of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption. Test scenarios, as well as the original JAMPI source code, are available online on Github under \texttt{https://github.com/starschema/jampi-spark-dotmatrix}.
 
 % subsection test_protocols (end)
 
@@ -420,7 +426,6 @@ The research summarized in this paper was funded by Starschema Inc.
 %----------------------------------------------------------------------------------------
 \phantomsection
 
-\bibliographystyle{unsrt}
 \bibliography{bibliography}
 
 %----------------------------------------------------------------------------------------
