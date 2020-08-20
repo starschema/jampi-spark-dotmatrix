@@ -1,0 +1,480 @@
+%  LaTeX support: latex@mdpi.com 
+%  In case you need support, please attach all files that are necessary for compiling as well as the log file, and specify the details of your LaTeX setup (which operating system and LaTeX version / tools you are using).
+
+%=================================================================
+\documentclass[bdcc,article,submit,moreauthors,pdftex]{Definitions/mdpi} 
+
+% If you would like to post an early version of this manuscript as a preprint, you may use preprint as the journal and change 'submit' to 'accept'. The document class line would be, e.g., \documentclass[preprints,article,accept,moreauthors,pdftex]{mdpi}. This is especially recommended for submission to arXiv, where line numbers should be removed before posting. For preprints.org, the editorial staff will make this change immediately prior to posting.
+
+%--------------------
+% Class Options:
+%--------------------
+%----------
+% journal
+%----------
+% Choose between the following MDPI journals:
+% acoustics, actuators, addictions, admsci, aerospace, agriculture, agriengineering, agronomy, ai, algorithms, allergies, analytica, animals, antibiotics, antibodies, antioxidants, applmech, applnano, applsci, arts, asc, asi, atmosphere, atoms, automation, axioms, batteries, bdcc, behavsci , beverages, bioengineering, biology, biomedicines, biomedinformatics, biomimetics, biomolecules, biosensors, bloods, brainsci, breath, buildings, cancers, carbon , catalysts, cells, ceramics, challenges, chemengineering, chemistry, chemosensors, chemproc, children, civileng, cleantechnol, climate, clockssleep, cmd, coatings, colloids, computation, computers, condensedmatter, cosmetics, cryptography, crystals, cyber, dairy, data, dentistry, dermatopathology, designs, diabetology, diagnostics, digital, diseases, diversity, drones, earth, econometrics, ecologies, economies, education, ejbc, ejihpe, electricity, electrochem, electronicmat, electronics, endocrines, energies, engproc, entropy, environments, environsciproc, epidemiologia, epigenomes, est, fermentation, fibers, fire, fishes, fluids, foods, forecasting, forests, fractalfract, fuels, futureinternet, futurephys, galaxies, games, gardens, gases, gastrointestdisord, gels, genealogy, genes, geohazards, geosciences, geriatrics, hazardousmatters, healthcare, hearts, heritage, highthroughput, horticulturae, humanities, hydrogen, hydrology, ijerph, ijfs, ijgi, ijms, ijtpp, immuno, informatics, information, infrastructures, inorganics, insects, instruments, inventions, iot, j, jcdd, jce, jcm, jcp, jcs, jdb, jfb, jfmk, jimaging, jintelligence, jlpea, jmmp, jmse, jne, jnt, jof, joitmc, journalmedia, jpm, jrfm, jsan, land, languages, laws, life, literature, livers, logistics, lubricants, machines, magnetochemistry, make, marinedrugs, materials, materproc, mathematics, mca, medicina, medicines, medsci, membranes, metabolites, metals, microarrays, micromachines, microorganisms, minerals, modelling, molbank, molecules, mps, mti, nanomaterials, ncrna, ijns, neurosci, neuroglia, nitrogen, notspecified, nutrients, obesities, oceans, ohbm, osteology, optics, organics, particles, pathogens, pharmaceuticals, pharmaceutics, pharmacy, philosophies, photonics, physics, plants, plasma, pollutants, polymers, polysaccharides, preprints , proceedings, processes, prosthesis, proteomes, psych, psychiatryint, publications, quantumrep, quaternary, qubs, radiation, reactions, recycling, religions, remotesensing, reprodmed, reports, resources, risks, robotics, safety, sci, scipharm, sensors, separations, sexes, signals, sinusitis, skins, smartcities, sna, societies, socsci, soilsystems, solids, sports, standards, stats, surfaces, surgeries, suschem, sustainability, world, symmetry, systems, technologies, telecom, test, tourismhosp, toxics, toxins, transplantology, tropicalmed, universe, urbansci, uro, vaccines, vehicles, vetsci, vibration, viruses, vision, water, wem, wevj, women
+
+%---------
+% article
+%---------
+% The default type of manuscript is "article", but can be replaced by: 
+% abstract, addendum, article, benchmark, book, bookreview, briefreport, casereport, changes, comment, commentary, communication, conceptpaper, conferenceproceedings, correction, conferencereport, expressionofconcern, extendedabstract, meetingreport, creative, datadescriptor, discussion, editorial, essay, erratum, hypothesis, interestingimages, letter, meetingreport, newbookreceived, obituary, opinion, projectreport, reply, retraction, review, perspective, protocol, shortnote, supfile, technicalnote, viewpoint
+% supfile = supplementary materials
+
+%----------
+% submit
+%----------
+% The class option "submit" will be changed to "accept" by the Editorial Office when the paper is accepted. This will only make changes to the frontpage (e.g., the logo of the journal will get visible), the headings, and the copyright information. Also, line numbering will be removed. Journal info and pagination for accepted papers will also be assigned by the Editorial Office.
+
+%------------------
+% moreauthors
+%------------------
+% If there is only one author the class option oneauthor should be used. Otherwise use the class option moreauthors.
+
+%---------
+% pdftex
+%---------
+% The option pdftex is for use with pdfLaTeX. If eps figures are used, remove the option pdftex and use LaTeX and dvi2pdf.
+
+%=================================================================
+\firstpage{1} 
+\makeatletter 
+\setcounter{page}{\@firstpage} 
+\makeatother
+\pubvolume{xx}
+\issuenum{1}
+\articlenumber{5}
+\pubyear{2020}
+\copyrightyear{2020}
+%\externaleditor{Academic Editor: name}
+\history{Received: date; Accepted: date; Published: date}
+%\updates{yes} % If there is an update available, un-comment this line
+
+%% MDPI internal command: uncomment if new journal that already uses continuous page numbers 
+%\continuouspages{yes}
+
+%------------------------------------------------------------------
+% The following line should be uncommented if the LaTeX file is uploaded to arXiv.org
+%\pdfoutput=1
+
+%=================================================================
+% Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx,epstopdf, lastpage, ifthen, lineno, float, amsmath, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, soul, multirow, microtype, tikz, totcount, amsthm, hyphenat, natbib, hyperref, footmisc, url, geometry, newfloat, caption
+\usepackage{setspace} % for block quoting
+
+\usepackage{etoolbox}
+
+\usepackage{graphicx}
+
+\usepackage{listings}
+
+\usepackage{url}
+
+\usepackage{hyperref}
+
+\usepackage{graphicx}
+
+\usepackage{algpseudocode}
+
+\lstdefinestyle{mystyle}{basicstyle=\ttfamily\footnotesize}
+\lstset{style=mystyle}
+
+\AtBeginEnvironment{quote}{\singlespace\vspace{-\topsep}\small}
+\AtEndEnvironment{quote}{\vspace{-\topsep}\endsinglespace}
+
+\graphicspath{ {figures/} }
+
+
+%=================================================================
+%% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
+%% For proofs, please use the proof environment (the amsthm package is loaded by the MDPI class).
+
+%=================================================================
+% Full title of the paper (Capitalized)
+\Title{JAMPI: efficient matrix multiplication in Spark using Barrier Execution Mode}
+
+% Author Orchid ID: enter ID or remove command
+\newcommand{\orcidauthorA}{0000-0001-9283-6865} % Add \orcidA{} behind the author's name
+\newcommand{\orcidauthorB}{0000-0003-3131-0864} % Add \orcidB{} behind the author's name
+\newcommand{\orcidauthorC}{0000-0002-4282-5890} % Add \orcidC{} behind the author's name
+
+% Authors, for the paper (add full first names)
+\Author{Tamas Foldi $^{1, *}$\orcidA{}, Chris von Csefalvay $^{1}$\orcidB{} and Nicolas A. Perez $^{2}$\orcidC{}}
+
+
+% Authors, for metadata in PDF
+\AuthorNames{Tamas Foldi, Chris von Csefalvay and Nicolas A. Perez}
+
+% Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
+\address{%
+$^{1}$ \quad Starschema Inc., Arlington, VA\\
+$^{2}$ \quad Hewlett Packard Enterprise Co., San Jose, CA}
+
+% Contact information of the corresponding author
+\corres{Correspondence: research@starschema.net}
+
+
+%\simplesumm{} % Simple summary
+
+%\conference{} % An extended version of a conference paper
+
+% Abstract (Do not insert blank lines, i.e. \\) 
+\abstract{The new barrier mode in Apache Spark allows embedding distributed deep learning training as a Spark stage to simplify the distributed training workflow. In Spark, a task in a stage doesn’t depend on any other tasks in the same stage, and hence it can be scheduled independently. However, several algorithms require more sophisticated inter-task communications, similar to the MPI paradigm. By combining distributed message passing (using asynchronous network IO), OpenJDK's new auto-vectorization and Spark's barrier execution mode, we can add non-map/reduce based algorithms, such as Cannon's distributed matrix multiplication to Spark. We document an efficient distributed matrix multiplication using Cannon's algorithm, which improves significantly on the performance of the existing MLlib implementation. Used within a barrier task, the algorithm described herein results in an up to 24\% performance increase on a 10,000x10,000 square matrix with a significantly lower memory footprint. Applications of efficient matrix multiplication include, among others, accelerating the training and implementation of deep convolutional neural network based workloads, and thus such efficient algorithms can play a ground-breaking role in faster, more efficient execution of even the most complicated machine learning tasks.}
+
+% Keywords
+\keyword{Apache Spark, distributed computing, distributed matrix algebra, deep learning, matrix primitives}
+
+% The fields PACS, MSC, and JEL may be left empty or commented out if not applicable
+%\PACS{J0101}
+\MSC{68W15}
+%\JEL{}
+
+
+%\setcounter{secnumdepth}{4}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+\section{Introduction} % (fold)
+\label{sec:introduction}
+
+The recent decade has seen the emergence of two immensely powerful processes in tandem: the rise of big data handling solutions like Apache Spark on one hand and the apotheosis of deep learning as the tool of choice for demanding computational solutions for machine learning problems. Yet at its essence, big data and deep learning remain not only separate communities but also significantly separate domains of software. Despite deep learning over big data becoming a crucial tool in a range of applications, including in computer vision,\cite{guo2016deep,voulodimos2018deep}  bioinformatics,\cite{spencer2014deep,alipanahi2015predicting,zhang2016deep,wei2018prediction} natural language processing (NLP),\cite{deselaers2009deep,socher2012deep,young2018recent,otter2020survey} clinical medicine,\cite{bar2015chest,havaei2016deep,liu2017detecting,stead2018clinical,campanella2019clinical,lehman2019mammographic} anomaly detection in cybersecurity and fraud detection,\cite{du2017deeplog,shone2018deep,chalapathy2019deep} and collaborative intelligence/recommender systems,\cite{wang2015collaborative,deng2016deep,karatzoglou2017deep,batmaz2019review} its full potential remains to be harnessed. The primary impediment in this respect is largely a divergence of attitudes and concerns, leading to two divergent paradigms of development:
+
+\begin{itemize}
+	\item \emph{The big data paradigm}, primarily designed around RDDs and the the DataFrame-based API. This outlook has dominated the development of Apache Spark.
+	\item \emph{The DL/ML paradigm}, which is primarily focused on efficient linear algebra operations to facilitate machine learning approaches, especially matrix algebra for deep neural networks.
+\end{itemize}
+
+
+The future of deep learning over big data depends greatly on facilitating the convergence of these two worlds into a single, unified paradigm: the use of well-designed big data management tools, such as Apache Spark, to interoperate with the demands of deep learning. The road towards this convergence depends on the development of efficient matrix primitives that facilitate rapid calculations over distributed networks and large data sets.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{figures/fig1.pdf}
+	\vspace{14pt}
+	\caption{Comparative execution models: Apache Spark versus distributed training for neural networks.}
+	\label{fig:execution-models}
+\end{figure}
+
+The current execution model of Apache Spark is principally focused on independent, embarrassingly parallel tasks that are run and scaled, but the needs of deep learning are primarily focused on distributed training: the performance of completely communicating and coordinating tasks, optimized for interconnectivity rather than independent parallel running, while also maintaining scalability and efficiency. With the recent introduction of the barrier execution mode in Apache Spark, it has finally become possible to construct a computational approach that allows for such networked execution to take place, facilitating distributed training of deep neural networks (see Figure~\ref{fig:execution-models}).
+
+JAMPI (Java Assisted Matrix Product with Inter-task communication), the framework described in this paper, is an efficient and rapid solution to an aspect of efficient matrix primitives, namely matrix multiplication. By integrating JDK's new \texttt{Vector API}, asynchronous network IO (\texttt{nio}) for distributed message passing and Spark's barrier mode, a pure Scala implementation of Cannon's 2.5D matrix multiplication algorithm can be devised that is significantly more efficient than \texttt{MLlib}'s \texttt{BlockMatrix.multiply} function. JAMPI thus avoids reliance on foreign, low level or native code in combination with \texttt{JNI} on one hand, being a pure Scala implementation. On the other hand, it provides a pre-written framework that integrates with Spark as a native task rather than an external MPI procedure call, and handles inter-task communication directly, yielding performance benefits that would otherwise be associated with a low-level MPI implemented resource negotiation framework.
+
+\subsection{Cannon's algorithm} % (fold)
+\label{sub:cannon_s_algorithm}
+
+Matrix multiplication plays a significant role in a range of practical applications, including (but not limited to) scientific computing, non-linear modeling, agent-based models and the training of deep convolutional neural networks (deep learning). The proliferation of deep learning as the cognitive technology of choice for problems with large source data sets and high-dimensional or high-order multivariate data means that efficiency gains in the underlying linear algebra primitives has the potential to enable significant performance benefits in a wide range of use cases. In particular, constructing primitives that leverage computational capacity through rapid parallel computation and efficient interchange lends itself as an avenue towards these performance gains. While packages comprising efficient matrix primitives already exist,\cite{chetlur2014cudnn} these often operate at a low level and do not integrate well with existing and proven solutions to manage large computational loads.
+
+
+The matrix multiplication operation $\star$ for an $p \times q$ matrix $\mathbf{A}$ and an $q \times r$ matrix $B$ is defined so that for the resultant matrix $\mathbf{C} = \mathbf{A} \star \mathbf{B}$, each element $c_{i, j}$ is the dot product of the $i$-th row of $\mathbf{A}$ and the $j$-th column of $\mathbf{B}$, i.e.
+
+\begin{equation}
+	c_{i, j} = \sum_{k = 1}^n a_{i, k} b_{k, j}
+\end{equation}
+
+The multiplication of square matrices constitutes a special case. For a square matrix of order $n$, i.e. an $n \times n$ matrix, a special case obtains, which can be resolved efficiently using Cannon's algorithm.\cite{cannon1969cellular} 
+
+For a square matrix of order $n$, i.e. $n \times n$, Cannon's algorithm uses a toroidally connected mesh $\mathbf{P}^{n \times n}$ of $n^2$ processes. Rendered in pseudocode, the algorithm can be expressed as follows for $p$ processors:
+
+\begin{algorithmic}
+	\ForAll{i = 0 : $\sqrt{p}$ - 1}
+		\State CShift left A[i; :] by i 
+	\EndFor
+	
+	\ForAll{j = 0 : $\sqrt{p}$ - 1}
+		\State CShift up B[:; j] by j 
+	\EndFor
+	
+	\For{k = 0 : $\sqrt{p}$ - 1}
+		\For{i = 0 : $\sqrt{p}$ - 1, j = 0 : $\sqrt{p}$ - 1}
+			\State C[i, j] += A[i, j] * B[i, j]
+			\State CShift left A[i; :] by 1
+			\State CShift up B[:; j] by 1
+		\EndFor
+	\EndFor
+\end{algorithmic}
+
+Cannon's algorithm is designed to be performed on a virtual square grid $\mathbf{P}$ of $p$ processors (i.e. a $\sqrt{p} \times \sqrt{p}$ matrix). The multiplicand and multiplier matrices $\mathbf{A}$ and $\mathbf{B}$ are laid out on $\mathbf{P}$, after which the $i$-th row of $\mathbf{A}$ is circularly shifted by $i$ to the left and the $j$-th column of $\mathbf{B}$ circularly shifted by $j$ elements up. Then, $n$ times, the two entries mapped onto $p_{i, j}$ are multiplied and added onto the running value of $p_{i, j}$, after which each row of $\mathbf{A}$ is shifted left by one element and each column of $\mathbf{B}$ is shifted up by one element.
+
+Standard methods of multiplying dense matrices require $O(n^3)$ floating operations for an $n \times n$ matrix. Cannon's algorithm improves on this by reducing it to $O(\frac{n^3}{p})$. In particular, because of the fact that memory is not dependent on the number of processors, it scales dynamically with the number of processors. This makes it an attractive candidate for implementation as a high-performance distributed matrix multiplication primitive.
+
+% subsection cannon_s_algorithm (end)
+
+\subsection{Spark's barrier mode} % (fold)
+\label{sub:spark_s_barrier_mode}
+
+Spark's barrier mode is a new mode of execution introduced to Apache Spark as part of Project Hydrogen.\cite{projecthydrogensite} Barrier execution features gang scheduling on top of the MapReduce execution model to support distributed deep learning tasks that are executed or embedded as Spark steps. The current implementation ensures that all tasks (limited to \texttt{mapPartitions}) are executed at the same time, and collectively cancels and restarts all tasks in case of failure events. In addition to true parallel execution, the workers' host names and partition identifiers are accessible inside the tasks, alongside a \texttt{barrier} call, similar to MPI's \texttt{MPI\_Barrier} function.\cite{projecthydrogenpres}
+
+While this functionality is sufficient to support the primary use case of Spark's barrier mode -- namely, executing embedded MPI or other foreign, i.e. non-Spark and non-JVM, steps within a Spark application --, it does not provide any inter-task communication primitive to implement the same algorithms within JVM/Spark native steps. In fact, the design documentation for Spark's barrier mode clearly defines this as outside the scope of the project, stating that beyond a simple \texttt{BarrierTaskContext.barrier()} call, no intra-communication functionality will be part of the implementation. It is assumed that such functionality would be handled by the user program. It is our view based on our extensive experience with implementing deep learning solutions on distributed systems that this is a clear show-stopper: if Spark is to be a force to be reckoned with as the data layer for deep learning applications over big data, it should not force execution outside Spark's boundaries.
+
+% subsection spark_s_barrier_mode (end)
+
+% section introduction (end)
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Methods} % (fold)
+\label{sec:methods}
+
+\subsection{Cannon's algorithm on MPI} % (fold)
+\label{sub:cannon_s_algorithm_on_mpi}
+
+The MPI version of the algorithm described in Subsection~\ref{sub:cannon_s_algorithm} relies on MPI's Cartesian topology. After setting up a 2D communication grid of processors with \texttt{MPI\_Cart\_create}, processors exchange data with their neighbors by calling \texttt{MPI\_Sendrecv\_replace}. In the main loop, each processor executes a local dot product calculation, then shifts the results horizontally for matrix \texttt{a} and vertically for matrix \texttt{b}. In our benchmarks, we used \texttt{MPICH} version 3.3.2 as the underlying MPI implementation.
+
+To speed up matrix multiplication, we applied \texttt{-O4} \texttt{-ftree-vectorize} \texttt{-march=native} GNU C compiler flags to ensure vectorized code execution. By vectorization, we refer using SIMD (Single Instruction, Multiple Data) CPU features, more precisely Advanced Vector Extensions (AVX-512F) that allows faster execution of fused multiply–add (\texttt{{FMAC}}) operations in local/partial matrix dot product steps. After compiling our code with GCC 7.3.1 we ensured that the disassembled code contains \texttt{vfmadd231sd} instruction for vectorized \texttt{FMAC}. 
+
+% subsection cannon_s_algorithm_on_mpi (end)
+
+\subsection{JAMPI} % (fold)
+\label{sub:jampi_implementation}
+
+JAMPI is a \emph{de novo} native Scala implementation of Cannon's algorithm as described in Subsection~\ref{sub:cannon_s_algorithm}. For message passing, we built an \texttt{nio} based asynchronous message passing library that mimics MPI's Cartesian topology and send-receive-replace functionality. To avoid unnecessary memory copies and to optimize performance for both throughput and latency, our \texttt{PeerMessage} object allocates fixed 8MB off-heap buffers for both sending and receiving data. Send and receive network operations are executed asynchronously and in parallel.
+
+The matrix multiplication is embedded into a barrier execution task, which is parametrized by the the number of partitions, the local partition ID, the hostnames for the other partitions (\texttt{address} from \texttt{BarrierTaskContext.getTaskInfos()}), as well as the  the local matrix pairs from the RDD.
+
+\begin{lstlisting}
+def dotProduct[T : ClassTag](
+  partitionId: Integer,
+  numOfPartitions: Integer,
+  hostMap: Array[String],
+  matrixA: Array[T],
+  MatrixB: Array[T]): Array[T] 
+\end{lstlisting}
+
+JAMPI supports \texttt{double}, \texttt{float} and \texttt{int} Java primitive data types passed as Java \texttt{Array}s.
+
+% subsection jampi_implementation (end)
+
+\subsection{Vectorization using Panama OpenJDK} % (fold)
+\label{sub:vector_panama}
+
+In order to achieve performance on par with the optimized MPI implementation for local dot product steps, we used JVM's native vector intrinsics and super-word optimization capabilities for both JAMPI and MLlib Spark application benchmarks. The most recent and most comprehensive vectorization support in JVM is found in the \texttt{Vector API} module, part of OpenJDK's \emph{Project Panama}. While the \texttt{Vector API} module is currently in incubation status, we consider it stable enough to use for both the Spark platform and application code.
+
+For fair benchmarking, we avoided using \texttt{Vector<>} objects or advanced methods such as manual unrolling. While these techniques could potentially further improve performance, our goals were to compare the distributed algorithms' performance with the same CPU opcodes used in local matrix multiplications. From the JIT compiler outputs, we confirmed that both Spark applications were using \texttt{vfmadd231sd}, just as in the GCC compiled MPI version.
+
+To use the new vector intrinsics' features, we built a custom OpenJDK package from the tip of the \texttt{panama/dev} branch (\texttt{dev-442a69af7bad}). The applied JVM flags were \texttt{--add-modules jdk.incubator.vector} and \texttt{ -XX:TypeProfileLevel=121} for both JAMPI and MLlib applications. 
+
+% 0x00007face057eaac:   vfmadd231sd %xmm2,%xmm0,%xmm1       ;*invokestatic fma {reexecute=0 rethrow=0 return_oop=0}
+% ; - com.starschema.jampi.blas.DotProductVector$::$anonfun$saxpy$1@12 (line 254)
+% ; - com.starschema.jampi.blas.DotProductVector$$$Lambda$5034/0x00000008019bc960::apply$mcVI$sp@13
+% ; - scala.collection.immutable.Range::foreach$mVc$sp@14 (line 158)
+% ; - com.starschema.jampi.blas.DotProductVector$::saxpy@24 (line 253)
+% ; - com.starschema.jampi.blas.DotProductVector$::$anonfun$fastBuffered$2@35 (line 242)
+% ; - com.starschema.jampi.blas.DotProductVector$$$Lambda$5033/0x00000008019bc568::apply$mcVI$sp@29
+
+% subsection vector_panama (end)
+
+\subsection{Apache Spark MLlib}
+
+We used Apache Spark MLlib's built-in \texttt{BlockMatrix.multiply()} as a baseline to compare with JAMPI's speed and resource usage. It is known that MLlib's implementation is often faster if the number of partitions exceeds that of worker cores (typically by a factor of 2-4 at least), a scenario known as \emph{over-partitioning}. To ensure that this is adequately reflected, we performed two test runs – a 'normal' test run, where partitions are set to equal the number of worker cores, and an 'over-partitioned' test run, where partitions equal four times the number of worker cores.
+
+\begin{figure*}
+	\centering
+	\includegraphics[width=0.9\linewidth]{overall_performance}
+	\vspace{14pt}
+	\caption{Comparative performance of JAMPI, native MPI and MLlib on random matrices of various dimensions, on 1, 16, 64 and 256 cores.}
+	\label{fig:overall_performance}
+\end{figure*}
+\subsection{Test protocols} % (fold)
+\label{sub:test_protocols}
+
+All tests were performed on Amazon Web Services EC2 instances using \texttt{m5} instance types with Intel\textsuperscript{\textregistered} Xeon\textsuperscript{\textregistered} Platinum 8175M CPUs and 4GB RAM per core. Tests were conducted on Apache Spark 3.0.0-preview2 with a separate master node. The driver process was initiated from the master node, and its resource consumption is not included in the results. For single core tests, 2-core CPUs were used, with the second CPU core having been manually disabled in the VM.
+
+\begin{center}
+	\begin{tabular}{ |c|c|c|c| } 
+	 \hline
+	 Total worker cores & Instance type & Nodes & Partitions  \\ 
+	 \hline\hline
+	 1 & m5.large & 1 & 1 \\ 
+	 \hline
+	 16 & m5.xlarge & 4 & 4 \\ 
+	 \hline
+	 64 & m5.2xlarge & 8 & 8 \\ 
+	 \hline
+	 256 & m5.2xlarge & 32 & 8 \\ 
+	 \hline
+	\end{tabular}
+\end{center}
+	
+
+Applications reported only the dot product execution time. A single one-value reducer (\texttt{avg}) was included to trigger RDD reduce/collection on Spark without moving substantial amount of data to the driver process. Timings thus exclude the MPI and Spark application startup times, but included the time required to establish a barrier task step during the RDD reduce step. For testing, random matrices composed of 64-bit floating point elements were used. Test scenarios were performed ten times, capturing execution time, CPU and memory consumption. Test scenarios, as well as the original JAMPI source code, are available online.\cite{jampi}
+
+% subsection test_protocols (end)
+
+\subsection{Scalability analysis} % (fold)
+\label{sub:scalability_analysis}
+
+
+An important aspect of any distributed algorithm is its ability to scale up as the problem size increases. This is crucial for proving the value of an algorithmic solution, since it demonstrates its ability to solve increasingly complex instances of the same fundamental problem effectively. There are intrinsic issues when scaling distributed multi-processor algorithms. It is known, for instance, that the memory requirement for each processor increases as we add processors to a computation. Therefore, we must analyze the effect of problem size on the memory requirements per processor. 
+
+For Cannon's algorithm multiplying two square matrices of size $n \times n$, the problem size $W$ is on the order of $n^2$, i.e.,
+
+\begin{equation}
+	W = \mathcal{O}(n^2)
+	\label{eq:problem_size}
+\end{equation}
+
+The sequential time, that is when $p$ = 1, is 
+
+\begin{equation}
+	T_1(n) = \mathcal{O}(n^3)
+	\label{eq:seq_runtime}
+\end{equation}
+
+For $p$ processors, the execution time for a matrix of size $n \times n$ is given as $T_p (n)$. It follows that parallelization of the problem yields a speed-up calculated as $\frac{W}{T_p (n)}$. 
+
+In addition, parallel execution of an $n \times n$ problem size over $p$ processors will incur a performance overhead of $T_o(n, p)$, including all communication costs. 
+
+It is known that the communication cost $D$, which is how much data is being shifted across the $p$ processors, can be calculated as 
+
+\begin{equation}
+	D = O(\frac{n^2}{\sqrt{p}})
+\end{equation}
+
+\noindent Using the following iso-efficiency relationship of parallel systems,  
+
+\begin{equation}
+	T_1(n) \geq c \ T_o(n, p)
+	\label{eq:iso_efficiency}
+\end{equation}
+
+\noindent Substituting Equation~\eqref{eq:seq_runtime} in Equation~\eqref{eq:iso_efficiency}, it follows that
+
+\begin{equation}
+	n^3 \geq c \ \sqrt{p} \ n^2 \ \implies \ n \geq c \ \sqrt{p}
+	\label{eq:scale_factor}
+\end{equation}
+
+\noindent It follows thus from Equation~\eqref{eq:scale_factor} and the definition of $W$ in Equation~\eqref{eq:problem_size} that
+
+\begin{equation}
+	\frac{M(c \ \sqrt{p})}{p} = \frac{c^2 \ p}{p} = c^2
+\end{equation}
+
+More generally, it holds that for a problem size $W$ and $p$ processors, Cannon's Algorithm memory requirements increase by a constant factor $c^2$ that is independent of the number of processors $p$ involved in the computation.  Since the memory requirements per processor increase linearly, without direct relationship to $p$, it can be said that Cannon's algorithm is extremely scalable. 
+
+Figure~\ref{fig:memory_usage} illustrates this scaling behavior comparatively between JAMPI, a pure MPI implementation and MLlib. JAMPI, as well as the MPI algorithm test case, are both direct implementations of Cannon's algorithm, thus having the same scalability behavior. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{figures/memory.png}
+	\vspace{14pt}
+	\caption{Comparative memory usage between JAMPI, MPI and MLlib}
+	\label{fig:memory_usage}
+\end{figure}
+
+It is evident from Figure~\ref{fig:memory_usage} that MLLib's memory requirement increases quite fast, suggesting that its scalability factor is larger than that of Cannon's algorithm (i.e. it is less scalable). This is a key limitation of MLlib and Spark when compared to MPI and JAMPI alike, which scale better. Indeed, in some test scenarios, we have been unable to scale MLlib beyond a certain problem size, indicating that in addition to its poor performance compared to MPI and JAMPI, it is also limited in the maximum problem size it can accommodate with a set level of resources. Neither JAMPI nor the native MPI implementation is so limited.
+
+% subsection scalability_analysis (end)
+
+\section{Results} % (fold)
+\label{sec:results}
+
+Comparative analysis of runtimes over a range of matrix sizes reveals that JAMPI is significantly superior to MLlib, even when over-partitioned (see Figure~\ref{fig:comparison_to_jampi}, over-partitioning is denoted by \texttt{op}). When normalized against JAMPI's execution times over 16 and 64 cores, execution time is slower for smaller matrices (under 4096 $\times$ 4096 elements) due to the need to establish and run the barrier execution task. However, beyond a trivial problem size, JAMPI and the MPI implementation rapidly become significantly more efficient, regardless of the number of cores. Notably, plain MLlib (i.e. without over-partitioning) was unable to accommodate a problem size beyond 10240 $\times$ 10240 (for 16 cores) or 20480 $\times$ 20480 (for 64 cores).
+
+\subsection{Memory usage} % (fold)
+\label{sub:memory_usage}
+
+Memory usage has been a documented limiting factor, with pure MLlib reaching execution limits at relatively trivial matrix dimensions per processor (Table~\ref{tab:out_of_memory}). While over-partitioning slightly increases the maximum matrix size, MLlib suffers from not only lower performance but also a memory consumption upper bound that limits its ability to scale to larger problem sizes.
+
+Our research indicates that for a 10,240 $\times$ 10,240 element standard matrix, JAMPI and MPI perform approximately equally (4,889 MB vs 5,108 MB, respectively, for 256 cores), while both over-partitioned and regular MLlib execution creates a marginally larger memory footprint (6,049 MB and 6,423 MB, respectively, for 256 cores).  However, with increasing problem size, differences become vastly apparent: for a 30,720 $\times$ 30,720 element matrix, MPI and JAMPI continue to require a constant memory footprint (5,572 MB and 6,084 MB, respectively), while the same problem size requires 24,525 MB with over-partitioning and 29,445 MB without. In other words, JAMPI and MPI memory burden increases constantly regardless of the number of cores, while MLLib's memory consumption increases rapidly, as Figure~\ref{fig:memory_usage} indicates. For instance, when processing 30,720 $\times$ 30,720 matrix size, MLlib requires a 4.03 (with over-partitioning) to 4.84 (without over-partitioning) times larger memory allocation.
+
+Comparative analysis of memory usage (see Figure~\ref{fig:memory_usage}) shows that JAMPI is generally on par (within 30\%) of the pure MPI implementation, while MLlib typically requires approximately four times the amount of memory allocation that the MPI based approaches demand, with regular MLlib requiring typically 15\% to 50\% more memory than over-partitioned implementations.
+
+\begin{table}
+	\centering
+	\begin{tabular}{ |c|c|c| } 
+	 \hline
+	 Cores & MLlib & MLlib (op)  \\ 
+	 \hline\hline
+	 1 & 4096 & 10240 \\ 
+	 \hline
+	 16 & 10240 & 15360 \\ 
+	 \hline
+	 64 & 20480 & 25600 \\ 
+	 \hline
+	 256 & 30720 & 51200 \\ 
+	 \hline
+	\end{tabular}
+	\caption{Out-of-memory boundary sizes for MLlib, in normal (MLlib) and over-partitioned (MLlib (op)) mode.}
+	\label{tab:out_of_memory}
+\end{table}
+	
+% subsection memory_usage (end)
+
+\subsection{Performance} % (fold)
+\label{sub:performance}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{compared_to_jampi}
+	\vspace{14pt}
+	\caption{Comparative execution times on 16 and 64 cores for various matrix sizes, normalized to JAMPI (blue).}
+	\label{fig:comparison_to_jampi}
+\end{figure}
+
+
+% \begin{figure}
+% 	\centering
+% 	\includegraphics[width=0.9\linewidth]{figures/runtimes.pdf}
+% 	\vspace{14pt}
+% 	\caption{Comparative execution times between JAMPI, MPI, MLlib and MLlib (p64) over $n \times n$ matrices of different sizes.}
+% 	\label{fig:runtimes}
+% \end{figure}
+
+Comparing performance in terms of execution time shows a similar picture in all multi-core environments. MLlib, both with and without over-partitioning, presents a lower execution time compared to JAMPI in trivial-sized matrices (4096 $\times$ 4096 for 16- and 64-core environments, 10240 $\times$ 10240 for 256-core environments). 
+
+However, MLlib execution times rapidly increases, yielding an average of 29.52\% (with over-partitioning) to 54.54\% (without over-partitioning) slower execution time at the largest feasible matrix for the given number of cores. On the other hand, for large matrices, as Figure~\ref{fig:comparison_to_jampi} shows, a pure MPI implementation is typically 3.38\% to 19.59\% faster than JAMPI. 
+
+The comparative analysis of performance indicators shows that while a pure MPI implementation is somewhat faster than JAMPI, this difference is significantly smaller than the difference between the MLlib implementation and JAMPI, proving that JAMPI is an efficient and fast alternative to pure MPI applications without a significant performance overhead.
+
+% subsection performance (end)
+
+
+
+% section results (end)
+
+\section{Discussion} % (fold)
+\label{sec:conclusion}
+
+Cannon's algorithm can be implemented quite conveniently using a barrier task within Spark, providing a native interpretation of this highly efficient distributed linear algebra primitive. By using barrier tasks to reimplement matrix primitives with Panama's built-in efficient vectorization and asynchronous communication (as provided by \texttt{nio} in this case), very significant performance gains can be effected on frequently used tasks. The proposed implementation of Cannon's algorithm, for instance, has yielded an almost 25\% decrease in execution time, and has been superior to the MLlib implementation on all core sizes above trivial matrix sizes. While this algorithm is limited to square matrices, the general effectiveness gains are indicative of a strong theoretical and practical benefit of further research in ways efficient matrix primitives can be integrated with big data solutions like Apache Spark. Further research in this field is required to create a coherent stack of matrix primitives in order to allow modern deep learning applications, relying greatly on such building blocks, to leverage the performance benefits of big data solutions in storing and managing data as a layer of an integrated framework of large-scale machine learning.
+
+% section conclusion (end)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vspace{6pt} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% optional
+%\supplementary{The following are available online at \linksupplementary{s1}, Figure S1: title, Table S1: title, Video S1: title.}
+
+% Only for the journal Methods and Protocols:
+% If you wish to submit a video article, please do so with any other supplementary material.
+% \supplementary{The following are available at \linksupplementary{s1}, Figure S1: title, Table S1: title, Video S1: title. A supporting video article is available at doi: link.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\authorcontributions{Conceptualization, T.F. and N.A.P.; methodology, T.F. and C.v.C.; software, T.F.; validation, T.F. and N.A.P, formal analysis, T.F. and N.A.P.; writing--original draft preparation, T.F., N.A.P. and C.v.C.; writing--review and editing, C.v.C.; visualization, T.F. and C.v.C.; supervision, C.v.C.; project administration, C.v.C. All authors have read and agreed to the published version of the manuscript.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\funding{This research received no external funding.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\conflictsofinterest{The authors declare no conflict of interest.} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\reftitle{References}
+
+% Please provide either the correct journal abbreviation (e.g. according to the “List of Title Word Abbreviations” http://www.issn.org/services/online-services/access-to-the-ltwa/) or the full name of the journal.
+% Citations and References in Supplementary files are permitted provided that they also appear in the reference list here. 
+
+%=====================================
+% References, variant A: external bibliography
+%=====================================
+\externalbibliography{yes}
+\bibliography{bibliography}
+
+\end{document}
+
